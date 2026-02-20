@@ -1,0 +1,35 @@
+server:
+  port: 6969
+  mode: "dev"
+grafana:
+  url: "127.0.0.1:3001"
+  username: "admin"
+  password: "nhan3132005"
+
+databases:
+  host: 127.0.0.1
+  port: 3307
+  dbname: auth_db
+  username: auth_user
+  password: auth_password
+  maxIdleConns: 10
+  maxOpenConns: 100
+  connMaxLifetime: 3600
+security:
+  jwt: 
+    key: abc123
+#Later move to env
+
+redis:
+  host: 127.0.0.1
+  port: 6381
+  Password:
+  database: 0
+
+log:
+  log_level: "debug"
+  file_log_name: "./storages/logs/dev.log"
+  max_size: 500
+  max_backups: 3
+  max_age: 30
+  compress: true
