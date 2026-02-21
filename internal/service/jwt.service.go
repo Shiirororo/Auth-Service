@@ -10,7 +10,7 @@ import (
 )
 
 type jwtService struct {
-	secret     []byte
+	secret     string
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 }
@@ -23,7 +23,7 @@ type JWTService interface {
 
 func NewJWTService(secret string) *jwtService {
 	return &jwtService{
-		secret:     []byte(secret),
+		secret:     secret,
 		accessTTL:  15 * time.Minute,
 		refreshTTL: 7 * 24 * time.Hour,
 	}
@@ -45,11 +45,11 @@ func (s *jwtService) GenerateAccessToken(userID string) (string, error) {
 		UserID:    userID,
 		TokenType: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        uuid.NewString(),
+			ID:        uuid.NewString(), // --> JIT
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.accessTTL)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    "backend_api",
+			Issuer:    "authorizor_api",
 		},
 	}
 

@@ -8,7 +8,8 @@ type Config struct {
 	Logger    LogSetting      `mapstructure:"logger"`
 }
 type ServerSetting struct {
-	Port int `mapstructure:"port"`
+	Port int    `mapstructure:"port"`
+	Mode string `mapstructure:"mode"`
 }
 type RedisSetting struct {
 	Host     string `mapstructure:"host"`
