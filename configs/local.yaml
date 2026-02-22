@@ -8,7 +8,7 @@ grafana:
 
 databases:
   host: 127.0.0.1
-  port: 3307
+  port: 33007
   dbname: auth_db
   username: auth_user
   password: auth_password

@@ -3,6 +3,7 @@ package auth_router
 import (
 	"os"
 
+	"github.com/auth_service/internal/handler"
 	"github.com/auth_service/internal/middleware"
 	"github.com/auth_service/internal/service"
 	"github.com/gin-gonic/gin"
@@ -10,24 +11,25 @@ import (
 )
 
 type AuthRouter struct {
-	redisClient *redis.Client
+	RedisClient *redis.Client
+	Handler     *handler.AuthHandler
 }
 
-func NewAuthRouter(redisClient *redis.Client) *AuthRouter {
+func NewAuthRouter(redisClient *redis.Client, Handler *handler.AuthHandler) *AuthRouter {
 	return &AuthRouter{
-		redisClient: redisClient,
+		RedisClient: redisClient,
+		Handler:     Handler,
 	}
 }
-
 func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {
 	//public router
 	AUTH := Router.Group("/auth")
 	{
-		AUTH.GET("/login")
+		AUTH.POST("login", ar.Handler.LoginHandler)
 		AUTH.POST("/register")
 	}
 	jwtService := service.NewJWTService(os.Getenv("JWT_SECRET"))
-	blacklist := service.NewRedisBlacklist(ar.redisClient)
+	blacklist := service.NewRedisBlacklist(ar.RedisClient)
 
 	authMiddleware := middleware.NewAuthMiddleware(
 		jwtService,
@@ -37,4 +39,7 @@ func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {
 	//private router
 	REQUIRE := Router.Group("/auth")
 	REQUIRE.Use(authMiddleware.AuthenticateToken())
+	{
+		REQUIRE.GET("/get_info")
+	}
 }

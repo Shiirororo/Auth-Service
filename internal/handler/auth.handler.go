@@ -9,11 +9,10 @@ import (
 )
 
 type AuthHandler struct {
-	authService *service.AuthService
-	jwtService  *service.JWTService
+	authService service.AuthService
 }
 
-func NewAuthHandler(authService *service.AuthService) *AuthHandler {
+func NewAuthHandler(authService service.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
@@ -48,17 +47,6 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
-}
-
-func (h *AuthHandler) AuthenticateHandler(c *gin.Context) {
-	//Im not even write it :(
-	var req LoginCredit
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-		return
-	}
-
 }
 
 // LogoutHandler handles user logout
