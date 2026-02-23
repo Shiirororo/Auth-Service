@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type jwtService struct {
+type jwtToken struct {
 	secret     string
 	accessTTL  time.Duration
 	refreshTTL time.Duration
@@ -21,8 +21,8 @@ type JWTService interface {
 	ParseRefreshToken(tokenString string) (*Claims, error)
 }
 
-func NewJWTService(secret string) *jwtService {
-	return &jwtService{
+func NewJWTSToken(secret string) *jwtToken {
+	return &jwtToken{
 		secret:     secret,
 		accessTTL:  15 * time.Minute,
 		refreshTTL: 7 * 24 * time.Hour,
@@ -35,7 +35,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func (s *jwtService) GenerateAccessToken(userID string) (string, error) {
+func (s *jwtToken) GenerateAccessToken(userID string) (string, error) {
 	if len(s.secret) == 0 {
 		return "", errors.New("JWT_SECRET is not set in environment variables")
 	}
@@ -57,7 +57,7 @@ func (s *jwtService) GenerateAccessToken(userID string) (string, error) {
 	return token.SignedString(s.secret)
 }
 
-func (s *jwtService) GenerateRefreshToken(userID string) (string, error) {
+func (s *jwtToken) GenerateRefreshToken(userID string) (string, error) {
 	if len(s.secret) == 0 {
 		return "", errors.New("JWT_SECRET is not set in environment variables")
 	}
@@ -80,11 +80,11 @@ func (s *jwtService) GenerateRefreshToken(userID string) (string, error) {
 }
 
 // VerifyJWT parses and validates the token, checking against the blacklist
-func (s *jwtService) VerifyJWT(ctx context.Context, tokenString string) (*Claims, error) {
+func (s *jwtToken) VerifyJWT(ctx context.Context, tokenString string) (*Claims, error) {
 	return s.parseToken(tokenString)
 }
 
-func (s *jwtService) ParseRefreshToken(tokenString string) (*Claims, error) {
+func (s *jwtToken) ParseRefreshToken(tokenString string) (*Claims, error) {
 	claims, err := s.parseToken(tokenString)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (s *jwtService) ParseRefreshToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func (s *jwtService) parseToken(tokenString string) (*Claims, error) {
+func (s *jwtToken) parseToken(tokenString string) (*Claims, error) {
 	if len(s.secret) == 0 {
 		return nil, errors.New("configuration error: JWT_SECRET is not set")
 	}

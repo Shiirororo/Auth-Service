@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"os"
 	"time"
 
 	"github.com/auth_service/internal/repository"
@@ -13,14 +12,14 @@ import (
 type AuthService struct {
 	authRepo   repository.AuthRepository
 	blacklist  TokenBlacklist
-	jwtService *jwtService
+	jwtService JWTService
 }
 
-func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist) *AuthService {
+func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist, jwtService JWTService) *AuthService {
 	return &AuthService{
 		authRepo:   authRepo,
 		blacklist:  blacklist,
-		jwtService: NewJWTService(os.Getenv("JWT_SECRET")),
+		jwtService: jwtService,
 	}
 }
 

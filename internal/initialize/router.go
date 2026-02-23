@@ -1,10 +1,6 @@
 package initialize
 
 import (
-	// "github.com/auth_service/global"
-	// "github.com/auth_service/internal/handler"
-	// "github.com/auth_service/internal/repository"
-	// "github.com/auth_service/internal/service"
 	"github.com/auth_service/global"
 	"github.com/auth_service/internal/router"
 	"github.com/gin-gonic/gin"

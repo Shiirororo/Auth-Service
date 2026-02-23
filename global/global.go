@@ -10,7 +10,7 @@ import (
 var (
 	Config settings.Config
 	Logger *logger.LoggerZap
-	Rdb    *redis.Client
+	Rdb    *redis.Client // -> Blacklist
 	DB     *gorm.DB
 )
 
