@@ -3,7 +3,6 @@ package initialize
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/auth_service/global"
 	"github.com/joho/godotenv"
@@ -26,7 +25,6 @@ func Run() {
 	LoadEnv()
 	InitMySQL()
 	InitRedis()
-	r := InitRouter()
-	r.Run(":" + strconv.Itoa(global.Config.Server.Port))
-	fmt.Println("Server is running at port: ")
+
+	fmt.Println("Successfully Initialized ")
 }

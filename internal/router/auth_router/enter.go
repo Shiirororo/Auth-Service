@@ -21,16 +21,16 @@ func NewAuthRouter(redisClient *service.RedisBlacklist, Handler *handler.AuthHan
 }
 func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {
 	//public router
-	AUTH := Router.Group("/auth")
+	auth := Router.Group("/auth")
+	//AUTH := Router.Group("/auth")
 	{
-		AUTH.POST("login", ar.Handler.LoginHandler)
-		AUTH.POST("/register")
+		auth.POST("/login", ar.Handler.LoginHandler)
 	}
 
 	//private router
-	REQUIRE := Router.Group("/auth")
-	REQUIRE.Use(ar.Middleware)
+	private := auth.Group("/")
+	private.Use(ar.Middleware)
 	{
-		REQUIRE.GET("/get_info")
+		private.GET("/get_info")
 	}
 }

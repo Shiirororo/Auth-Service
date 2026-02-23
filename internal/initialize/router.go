@@ -6,26 +6,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouter() *gin.Engine {
-	var r *gin.Engine
+func InitRouter(r *gin.Engine) {
 	if global.Config.Server.Mode == "dev" {
 		gin.SetMode(gin.DebugMode)
 		gin.ForceConsoleColor()
-		r = gin.Default()
 	} else {
 		gin.SetMode(gin.ReleaseMode)
-		r = gin.New()
 	}
 	AuthRouter := router.RouterGroupApp.Auth
+	HealthRouter := router.RouterGroupApp.Health
 
-	MainGroup := r.Group("v1")
+	api := r.Group("/v1")
+
 	{
-		AuthRouter.InitAuthRouter(MainGroup)
+		AuthRouter.InitAuthRouter(api) //<- MainGroup
+		HealthRouter.InitHealthRouter(api)
 	}
-	return r
 
-	//Middleware use here:
-	//logging
-	//cross
-	//limiter global
 }
+
+//Middleware use here:
+//logging
+//cross
+//limiter global
