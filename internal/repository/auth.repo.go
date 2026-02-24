@@ -13,15 +13,10 @@ import (
 type authRepository struct {
 	db *gorm.DB
 }
-type User struct {
-	username string
-	password string
-	email    string
-}
 
 type AuthRepository interface {
 	FindByUsername(ctx context.Context, username string) (*po.AuthUser, error)
-	UpdateLastLogin(ctx context.Context, userID uuid.UUID) error
+	UpdateLastLogin(ctx context.Context, userID string) error
 	CreateNewUser(ctx context.Context, usename string, password string, email string) error
 }
 
@@ -56,8 +51,18 @@ func (r *authRepository) GetUser(ctx context.Context, userID uuid.UUID) (*po.Aut
 	return &user, nil
 }
 func (r *authRepository) CreateNewUser(ctx context.Context, username string, password string, email string) error {
+
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-	NewUser := User{username: username, password: string(hashPass), email: email}
+	if err != nil {
+		return err
+	}
+
+	NewUser := po.AuthUser{
+		ID:           uuid.NewString(),
+		Username:     username,
+		PasswordHash: string(hashPass),
+		Email:        email,
+	}
 
 	err = r.db.Create(&NewUser).Error
 	return err
@@ -76,7 +81,7 @@ func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (*po.
 
 	return &user, nil
 }
-func (r *authRepository) UpdateLastLogin(ctx context.Context, userID uuid.UUID) error {
+func (r *authRepository) UpdateLastLogin(ctx context.Context, userID string) error {
 	var user po.AuthUser
 	now := time.Now()
 	user.LastLogin = &now

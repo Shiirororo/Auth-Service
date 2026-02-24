@@ -54,7 +54,7 @@ func (s *jwtToken) GenerateAccessToken(userID string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.secret)
+	return token.SignedString([]byte(s.secret))
 }
 
 func (s *jwtToken) GenerateRefreshToken(userID string) (string, error) {
@@ -76,7 +76,7 @@ func (s *jwtToken) GenerateRefreshToken(userID string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.secret)
+	return token.SignedString([]byte(s.secret))
 }
 
 // VerifyJWT parses and validates the token, checking against the blacklist

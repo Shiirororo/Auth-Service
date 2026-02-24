@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-
-	"log"
 	"time"
 
 	"github.com/auth_service/internal/repository"
@@ -49,18 +47,17 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 
 	// 3. Compare password
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-	log.Println("Bug on compare hash password")
 	if err != nil {
 		return "", "", errors.New("Invalid credentials")
 	}
 
 	// 4. Generate Token
-	accessToken, err := s.jwtService.GenerateAccessToken(user.ID.String()) // Convert UUID to string
+	accessToken, err := s.jwtService.GenerateAccessToken(user.ID) // Convert UUID to string
 	if err != nil {
 		return "", "", err
 	}
 
-	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID.String())
+	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID)
 	if err != nil {
 		return "", "", err
 	}
@@ -70,9 +67,8 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	s.authRepo.UpdateLastLogin(ctx, user.ID)
 
 	// 5. Store Refresh Token
-	log.Println("Set token error")
 
-	err = s.blacklist.SetRefreshToken(ctx, user.ID.String(), refreshToken, 7*24*time.Hour)
+	err = s.blacklist.SetRefreshToken(ctx, user.ID, refreshToken, 7*24*time.Hour)
 	if err != nil {
 		return "", "", err
 	}
