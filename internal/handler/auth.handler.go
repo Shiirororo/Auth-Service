@@ -49,44 +49,6 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	})
 }
 
-// LogoutHandler handles user logout
-// func (h *AuthHandler) LogoutHandler(c *gin.Context) {
-// 	// Extract Access Token from header to blacklist it
-// 	tokenString := c.GetHeader("Authorization")
-// 	if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
-// 		tokenString = tokenString[7:]
-// 	}
-
-// 	userID, exists := service.GetUserID(c)
-// 	if !exists {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-// 		return
-// 	}
-
-// 	// Verify again to get claims (ID, Exp)
-// 	claims, err := h.jwtService.VerifyJWT(c.Request.Context(), tokenString, nil)
-// 	if err != nil {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-// 		return
-// 	}
-
-// 	if claims.ExpiresAt == nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid token claims"})
-// 		return
-// 	}
-
-// 	// Calculate TTL
-// 	ttl := time.Until(claims.ExpiresAt.Time)
-
-// 	err = h.authService.LogoutService(c.Request.Context(), claims.ID, ttl, userID)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "logout failed"})
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, gin.H{"message": "logout success"})
-// }
-
 // RefreshHandler handles token refresh
 func (h *AuthHandler) RefreshHandler(c *gin.Context) {
 	var req struct {

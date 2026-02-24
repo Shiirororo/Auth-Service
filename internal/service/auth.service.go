@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+
+	"log"
 	"time"
 
 	"github.com/auth_service/internal/repository"
@@ -23,13 +25,20 @@ func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist
 	}
 }
 
+// Should I add interface here?
+func (s *AuthService) RegisterService(ctx context.Context, username string, password string, email string) error {
+	err := s.authRepo.CreateNewUser(ctx, username, password, email)
+
+	return err
+}
+
 // Login authenticates a user and returns access/refresh tokens
 func (s *AuthService) LoginService(ctx context.Context, username string, password string) (string, string, error) {
 	// 1. Find user
 	user, err := s.authRepo.FindByUsername(ctx, username)
+
 	if err != nil {
-		// Log the actual error internally if needed, but return generic error to user
-		return "", "", errors.New("Invalid credentials")
+		return "", "", errors.New("Invalid credentials, USER NOT FOUND")
 	}
 
 	// 2. Check lock
@@ -39,16 +48,13 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	}
 
 	// 3. Compare password
-	err = bcrypt.CompareHashAndPassword(
-		[]byte(user.PasswordHash),
-		[]byte(password),
-	)
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	log.Println("Bug on compare hash password")
 	if err != nil {
 		return "", "", errors.New("Invalid credentials")
 	}
 
 	// 4. Generate Token
-	// Assuming logic to get role from user model exists, or default to "user"
 	accessToken, err := s.jwtService.GenerateAccessToken(user.ID.String()) // Convert UUID to string
 	if err != nil {
 		return "", "", err
@@ -61,8 +67,11 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 
 	// 5. Update last_login (async or sync)
 	// go s.authRepo.UpdateLastLogin(ctx, user.ID)
+	s.authRepo.UpdateLastLogin(ctx, user.ID)
 
 	// 5. Store Refresh Token
+	log.Println("Set token error")
+
 	err = s.blacklist.SetRefreshToken(ctx, user.ID.String(), refreshToken, 7*24*time.Hour)
 	if err != nil {
 		return "", "", err
@@ -115,17 +124,3 @@ func (s *AuthService) RefreshTokenService(ctx context.Context, refreshToken stri
 
 	return newAccessToken, newRefreshToken, nil
 }
-
-// JWT service management:
-// - Generate access token
-// - Generate refresh token
-// - Parse access token
-// - Parse refresh token
-// - Validate access token
-// - Validate refresh token
-// - Blacklist access token
-// - Blacklist refresh token
-// - Get access token
-// - Get refresh token
-// - Delete access token
-// - Delete refresh token

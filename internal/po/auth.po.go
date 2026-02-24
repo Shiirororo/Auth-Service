@@ -7,10 +7,10 @@ import (
 )
 
 type AuthUser struct {
-	ID           uuid.UUID  `gorm:"type:char(36);primaryKey"`
+	ID           uuid.UUID  `gorm:"type:char(36);primaryKey;default:(UUID())"`
 	Username     string     `gorm:"type:varchar(50);unique;not null"`
-	Email        *string    `gorm:"type:varchar(100);unique"`
-	PasswordHash string     `gorm:"type:text;not null"`
+	Email        *string    `gorm:"type:varchar(100);uniqueIndex"`
+	PasswordHash string     `gorm:"type:varchar(72);not null"`
 	LastLogin    *time.Time `gorm:"type:timestamp"`
 	LockedUntil  *time.Time `gorm:"type:timestamp"`
 	CreatedAt    time.Time  `gorm:"autoCreateTime"`

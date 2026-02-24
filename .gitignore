@@ -3,3 +3,4 @@ configs/production.yaml
 /test
 pkg /logger
 
+cmd/console
