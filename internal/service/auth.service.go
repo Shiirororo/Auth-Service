@@ -15,12 +15,19 @@ type AuthService struct {
 	jwtService JWTService
 }
 
-func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist, jwtService JWTService) *AuthService {
+func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist, jwtService JWTService) AuthServiceInterface {
 	return &AuthService{
 		authRepo:   authRepo,
 		blacklist:  blacklist,
 		jwtService: jwtService,
 	}
+}
+
+type AuthServiceInterface interface {
+	RegisterService(ctx context.Context, username string, password string, email string) error
+	LoginService(ctx context.Context, username string, password string) (string, string, error)
+	LogoutService(ctx context.Context, userID string, JIT string, TTL time.Time) error
+	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 // Should I add interface here?
@@ -63,29 +70,21 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	}
 
 	// 5. Update last_login (async or sync)
-	// go s.authRepo.UpdateLastLogin(ctx, user.ID)
 	s.authRepo.UpdateLastLogin(ctx, user.ID)
-
-	// 5. Store Refresh Token
-
-	err = s.blacklist.SetRefreshToken(ctx, user.ID, refreshToken, 7*24*time.Hour)
-	if err != nil {
-		return "", "", err
-	}
 
 	return accessToken, refreshToken, nil
 }
 
-func (s *AuthService) LogoutService(ctx context.Context, userID string, JIT string, TTL time.Duration) error {
+func (s *AuthService) LogoutService(ctx context.Context, userID string, JIT string, TTL time.Time) error {
 	// 1. Revoke Refresh Token
-	if err := s.blacklist.SetRefreshToken(ctx, userID, JIT, TTL); err != nil {
+	if err := s.blacklist.RevokeRefreshToken(ctx, userID, JIT, TTL); err != nil {
 		return err
 	}
 
-	return s.blacklist.SetRefreshToken(ctx, userID, JIT, TTL)
+	return s.blacklist.RevokeRefreshToken(ctx, userID, JIT, TTL)
 }
 
-func (s *AuthService) RefreshTokenService(ctx context.Context, refreshToken string) (string, string, error) {
+func (s *AuthService) RefreshService(ctx context.Context, refreshToken string) (string, string, error) {
 	// 1. Verify Refresh Token
 	claims, err := s.jwtService.ParseRefreshToken(refreshToken)
 	if err != nil {
@@ -113,7 +112,7 @@ func (s *AuthService) RefreshTokenService(ctx context.Context, refreshToken stri
 	}
 
 	// 4. Update Redis (Rotate)
-	err = s.blacklist.SetRefreshToken(ctx, claims.UserID, newRefreshToken, 7*24*time.Hour)
+	err = s.blacklist.RevokeRefreshToken(ctx, claims.UserID, newRefreshToken, time.Now().Add(7*24*time.Hour))
 	if err != nil {
 		return "", "", err
 	}

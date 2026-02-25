@@ -25,13 +25,10 @@ func main() {
 	jwtService := service.NewJWTSToken(os.Getenv("JWT_SECRET"))
 	auth_repo := repository.NewAuthRepository(global.DB)
 	auth_service := service.NewAuthService(auth_repo, blacklist, jwtService)
-	auth_handler := handler.NewAuthHandler(*auth_service)
+	auth_handler := handler.NewAuthHandler(auth_service)
 
-	auth_middleware := middleware.NewAuthMiddleware(
-		jwtService,
-		blacklist,
-	)
-	authRouter := auth_router.NewAuthRouter(blacklist, auth_handler, auth_middleware.AuthenticateToken())
+	auth_middleware := middleware.NewAuthMiddleware(jwtService, blacklist)
+	authRouter := auth_router.NewAuthRouter(auth_handler, auth_middleware.AuthenticateToken())
 
 	healthHandler := handler.NewHealthHandler()
 	healthRouter := health_check.NewHealthRouter(healthHandler)

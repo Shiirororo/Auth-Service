@@ -71,7 +71,7 @@ func (s *jwtToken) GenerateRefreshToken(userID string) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.refreshTTL)), // 7 days
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-			Issuer:    "backend_api",
+			Issuer:    "authorizor_api",
 		},
 	}
 

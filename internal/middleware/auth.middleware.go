@@ -31,7 +31,7 @@ func (m *AuthMiddleware) AuthenticateToken() gin.HandlerFunc { //Verify Signatur
 			return
 		}
 
-		isBlackListed, err := m.tokenRepo.IsBlacklisted(reqCtx, tokenString)
+		isBlackListed, err := m.tokenRepo.IsBlacklisted(reqCtx, tokenString, "")
 
 		if isBlackListed {
 			abortUnauthorized(c, "Token has been revoked")

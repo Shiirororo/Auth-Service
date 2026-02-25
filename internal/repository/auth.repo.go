@@ -82,12 +82,12 @@ func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (*po.
 	return &user, nil
 }
 func (r *authRepository) UpdateLastLogin(ctx context.Context, userID string) error {
-	var user po.AuthUser
 	now := time.Now()
-	user.LastLogin = &now
-	return r.db.Save(&user).Error
-}
 
-// func(r *authRepository) UpdateUser (ctx context.Context, u *po.AuthUser) (*po.AuthUser, error) {
-// 	_, err := r
-// }
+	return r.db.
+		WithContext(ctx).
+		Model(&po.AuthUser{}).
+		Where("id = ?", userID).
+		Update("last_login", now).
+		Error
+}

@@ -2,17 +2,17 @@ package handler
 
 import (
 	"net/http"
-	// "time"
+	"time"
 
 	"github.com/auth_service/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
-	authService service.AuthService
+	authService service.AuthServiceInterface
 }
 
-func NewAuthHandler(authService service.AuthService) *AuthHandler {
+func NewAuthHandler(authService service.AuthServiceInterface) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
@@ -21,9 +21,9 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type LoginCredit struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+type LogoutRequest struct {
+	UserID string `json:"UserID" binding:"required"`
+	JIT    string `json:"JIT" binding:"required"`
 }
 
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
@@ -43,10 +43,27 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"refresh_token": refreshToken,
 		"message":       "login success",
 		"access_token":  accessToken,
-		"refresh_token": refreshToken,
 	})
+}
+func (h *AuthHandler) LogoutHandler(c *gin.Context) {
+	var req LogoutRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid request"})
+		return
+	}
+	err := h.authService.LogoutService(c.Request.Context(), req.UserID, req.JIT, time.Now().Add(15*time.Minute))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Logout success",
+	})
+
 }
 
 // RefreshHandler handles token refresh
@@ -60,7 +77,7 @@ func (h *AuthHandler) RefreshHandler(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.authService.RefreshTokenService(c.Request.Context(), req.RefreshToken)
+	accessToken, refreshToken, err := h.authService.RefreshService(c.Request.Context(), req.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
