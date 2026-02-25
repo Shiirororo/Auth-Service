@@ -1,6 +1,14 @@
+# Auth Service (Go)
 
-# THIS IS AUTHENTICATION CODEBASE FOR GO
+Authentication and user information service following a layered architecture.
 
+## Architecture Flow
+`User -> Router -> Middleware -> Service -> Repository -> Database`
 
-## FOLLOWING THE SOLID PRINCIPLE
+## API Documentation
+Detailed endpoint instructions can be found in [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 
+## Key Features
+- **Session-based Blacklist**: Logout revokes the entire session ID.
+- **JWT Token Rotation**: Secure refresh token flow with JTI blocking.
+- **Layered Design**: Adheres to SOLID principles for maintainability.

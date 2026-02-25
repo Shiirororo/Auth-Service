@@ -21,12 +21,6 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type LogoutRequest struct {
-	// Fields are now optional as we prefer using SessionID from token
-	UserID string `json:"UserID"`
-	JIT    string `json:"JIT"`
-}
-
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	var req LoginRequest
@@ -50,7 +44,6 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	})
 }
 func (h *AuthHandler) LogoutHandler(c *gin.Context) {
-	// Extract SessionID from claims (set by middleware)
 	val, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "claims not found"})
@@ -63,7 +56,6 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 		return
 	}
 
-	// Calculate TTL for the session blacklist (e.g., until token expires)
 	ttl := time.Until(claims.ExpiresAt.Time)
 
 	err := h.authService.LogoutService(c.Request.Context(), claims.SessionID, ttl)
@@ -77,7 +69,6 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 
 }
 
-// RefreshHandler handles token refresh
 func (h *AuthHandler) RefreshHandler(c *gin.Context) {
 	var req struct {
 		RefreshToken string `json:"refresh_token" binding:"required"`
