@@ -31,9 +31,15 @@ func (m *AuthMiddleware) AuthenticateToken() gin.HandlerFunc { //Verify Signatur
 			return
 		}
 
-		isBlackListed, err := m.tokenRepo.IsBlacklisted(reqCtx, tokenString, "")
+		// Check Blacklist
+		isSessionBlocked, _ := m.tokenRepo.IsSessionBlacklisted(reqCtx, claims.SessionID)
+		if isSessionBlocked {
+			abortUnauthorized(c, "Session has been revoked")
+			return
+		}
 
-		if isBlackListed {
+		isJTIBlocked, _ := m.tokenRepo.IsJTIBlacklisted(reqCtx, claims.ID)
+		if isJTIBlocked {
 			abortUnauthorized(c, "Token has been revoked")
 			return
 		}

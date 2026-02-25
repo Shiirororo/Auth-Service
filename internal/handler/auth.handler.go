@@ -22,8 +22,9 @@ type LoginRequest struct {
 }
 
 type LogoutRequest struct {
-	UserID string `json:"UserID" binding:"required"`
-	JIT    string `json:"JIT" binding:"required"`
+	// Fields are now optional as we prefer using SessionID from token
+	UserID string `json:"UserID"`
+	JIT    string `json:"JIT"`
 }
 
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
@@ -49,13 +50,23 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 	})
 }
 func (h *AuthHandler) LogoutHandler(c *gin.Context) {
-	var req LogoutRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid request"})
+	// Extract SessionID from claims (set by middleware)
+	val, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "claims not found"})
 		return
 	}
-	err := h.authService.LogoutService(c.Request.Context(), req.UserID, req.JIT, time.Now().Add(15*time.Minute))
+
+	claims, ok := val.(*service.Claims)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid claims type"})
+		return
+	}
+
+	// Calculate TTL for the session blacklist (e.g., until token expires)
+	ttl := time.Until(claims.ExpiresAt.Time)
+
+	err := h.authService.LogoutService(c.Request.Context(), claims.SessionID, ttl)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

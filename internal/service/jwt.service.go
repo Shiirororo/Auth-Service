@@ -15,8 +15,8 @@ type jwtToken struct {
 	refreshTTL time.Duration
 }
 type JWTService interface {
-	GenerateAccessToken(userID string) (string, error)
-	GenerateRefreshToken(userID string) (string, error)
+	GenerateAccessToken(userID string, sessionID string) (string, error)
+	GenerateRefreshToken(userID string, sessionID string) (string, error)
 	VerifyJWT(ctx context.Context, tokenString string) (*Claims, error)
 	ParseRefreshToken(tokenString string) (*Claims, error)
 }
@@ -31,11 +31,12 @@ func NewJWTSToken(secret string) *jwtToken {
 
 type Claims struct {
 	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
 	TokenType string `json:"type"`
 	jwt.RegisteredClaims
 }
 
-func (s *jwtToken) GenerateAccessToken(userID string) (string, error) {
+func (s *jwtToken) GenerateAccessToken(userID string, sessionID string) (string, error) {
 	if len(s.secret) == 0 {
 		return "", errors.New("JWT_SECRET is not set in environment variables")
 	}
@@ -43,9 +44,10 @@ func (s *jwtToken) GenerateAccessToken(userID string) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		UserID:    userID,
+		SessionID: sessionID,
 		TokenType: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        uuid.NewString(), // --> JIT
+			ID:        uuid.NewString(), // --> JTI
 			ExpiresAt: jwt.NewNumericDate(now.Add(s.accessTTL)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
@@ -57,7 +59,7 @@ func (s *jwtToken) GenerateAccessToken(userID string) (string, error) {
 	return token.SignedString([]byte(s.secret))
 }
 
-func (s *jwtToken) GenerateRefreshToken(userID string) (string, error) {
+func (s *jwtToken) GenerateRefreshToken(userID string, sessionID string) (string, error) {
 	if len(s.secret) == 0 {
 		return "", errors.New("JWT_SECRET is not set in environment variables")
 	}
@@ -65,6 +67,7 @@ func (s *jwtToken) GenerateRefreshToken(userID string) (string, error) {
 	now := time.Now()
 	claims := Claims{
 		UserID:    userID,
+		SessionID: sessionID,
 		TokenType: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
@@ -111,7 +114,7 @@ func (s *jwtToken) parseToken(tokenString string) (*Claims, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("unexpected signing method")
 			}
-			return s.secret, nil
+			return []byte(s.secret), nil
 		},
 	)
 

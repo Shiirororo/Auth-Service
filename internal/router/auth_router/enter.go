@@ -22,6 +22,7 @@ func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {
 	//AUTH := Router.Group("/auth")
 	{
 		auth.POST("/login", ar.Handler.LoginHandler)
+		auth.POST("/refresh-token", ar.Handler.RefreshHandler)
 	}
 
 	//private router

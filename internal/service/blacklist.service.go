@@ -22,21 +22,36 @@ func NewRedisBlacklist(client *redis.Client) TokenBlacklist {
 }
 
 type TokenBlacklist interface {
-	IsBlacklisted(ctx context.Context, userID string, jti string) (bool, error)
-	RevokeRefreshToken(ctx context.Context, userID string, jti string, ttl time.Time) error
+	BlacklistSession(ctx context.Context, sessionID string, ttl time.Duration) error
+	IsSessionBlacklisted(ctx context.Context, sessionID string) (bool, error)
+	BlacklistJTI(ctx context.Context, jti string, ttl time.Duration) error
+	IsJTIBlacklisted(ctx context.Context, jti string) (bool, error)
 }
 
-func (r *RedisBlacklist) IsBlacklisted(ctx context.Context, userID string, jti string) (bool, error) {
-	key := "token:blacklist:" + userID + "_" + jti
-	exists, err := r.client.Exists(ctx, key).Result()
-	return exists == 1, err
-}
-func (r *RedisBlacklist) RevokeRefreshToken(ctx context.Context, userID string, jti string, exp time.Time) error {
-	ttl := time.Until(exp)
+func (r *RedisBlacklist) BlacklistSession(ctx context.Context, sessionID string, ttl time.Duration) error {
 	if ttl <= 0 {
 		return nil
 	}
-
-	key := fmt.Sprintf("token:blacklist:%s", userID+"_"+jti)
+	key := fmt.Sprintf("token:blacklist:session:%s", sessionID)
 	return r.client.Set(ctx, key, "1", ttl).Err()
-} // Write to jti
+}
+
+func (r *RedisBlacklist) IsSessionBlacklisted(ctx context.Context, sessionID string) (bool, error) {
+	key := fmt.Sprintf("token:blacklist:session:%s", sessionID)
+	exists, err := r.client.Exists(ctx, key).Result()
+	return exists == 1, err
+}
+
+func (r *RedisBlacklist) BlacklistJTI(ctx context.Context, jti string, ttl time.Duration) error {
+	if ttl <= 0 {
+		return nil
+	}
+	key := fmt.Sprintf("token:blacklist:jti:%s", jti)
+	return r.client.Set(ctx, key, "1", ttl).Err()
+}
+
+func (r *RedisBlacklist) IsJTIBlacklisted(ctx context.Context, jti string) (bool, error) {
+	key := fmt.Sprintf("token:blacklist:jti:%s", jti)
+	exists, err := r.client.Exists(ctx, key).Result()
+	return exists == 1, err
+}

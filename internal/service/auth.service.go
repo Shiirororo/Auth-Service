@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/auth_service/internal/repository"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -26,7 +27,7 @@ func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist
 type AuthServiceInterface interface {
 	RegisterService(ctx context.Context, username string, password string, email string) error
 	LoginService(ctx context.Context, username string, password string) (string, string, error)
-	LogoutService(ctx context.Context, userID string, JIT string, TTL time.Time) error
+	LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
 }
 
@@ -58,30 +59,28 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 		return "", "", errors.New("Invalid credentials")
 	}
 
-	// 4. Generate Token
-	accessToken, err := s.jwtService.GenerateAccessToken(user.ID) // Convert UUID to string
+	// 4. Generate SessionID
+	sessionID := uuid.NewString()
+
+	// 5. Generate Tokens
+	accessToken, err := s.jwtService.GenerateAccessToken(user.ID, sessionID)
 	if err != nil {
 		return "", "", err
 	}
 
-	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID)
+	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, sessionID)
 	if err != nil {
 		return "", "", err
 	}
 
-	// 5. Update last_login (async or sync)
+	// 6. Update last_login (async or sync)
 	s.authRepo.UpdateLastLogin(ctx, user.ID)
 
 	return accessToken, refreshToken, nil
 }
 
-func (s *AuthService) LogoutService(ctx context.Context, userID string, JIT string, TTL time.Time) error {
-	// 1. Revoke Refresh Token
-	if err := s.blacklist.RevokeRefreshToken(ctx, userID, JIT, TTL); err != nil {
-		return err
-	}
-
-	return s.blacklist.RevokeRefreshToken(ctx, userID, JIT, TTL)
+func (s *AuthService) LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error {
+	return s.blacklist.BlacklistSession(ctx, sessionID, ttl)
 }
 
 func (s *AuthService) RefreshService(ctx context.Context, refreshToken string) (string, string, error) {
@@ -91,28 +90,32 @@ func (s *AuthService) RefreshService(ctx context.Context, refreshToken string) (
 		return "", "", errors.New("invalid refresh token")
 	}
 
-	storedToken := "sadasdasda"
-
-	if storedToken != refreshToken {
-		// Token reuse detected!
-		return "", "", errors.New("invalid refresh token (reuse detected)")
+	// 2. Check Blacklist
+	// Check Session
+	isSessionBlocked, err := s.blacklist.IsSessionBlacklisted(ctx, claims.SessionID)
+	if err != nil || isSessionBlocked {
+		return "", "", errors.New("session has been revoked")
 	}
 
-	// 3. Generate New Tokens
-	// TODO: Fetch user to get latest role. For now assuming "user" role.
+	// Check JTI (Reuse detection)
+	isJTIBlocked, err := s.blacklist.IsJTIBlacklisted(ctx, claims.ID)
+	if err != nil || isJTIBlocked {
+		return "", "", errors.New("token has been reused")
+	}
 
-	newAccessToken, err := s.jwtService.GenerateAccessToken(claims.UserID)
+	// 3. Blacklist old RT's JTI
+	ttl := time.Until(claims.ExpiresAt.Time)
+	if err := s.blacklist.BlacklistJTI(ctx, claims.ID, ttl); err != nil {
+		return "", "", err
+	}
+
+	// 4. Generate New Tokens with SAME SessionID
+	newAccessToken, err := s.jwtService.GenerateAccessToken(claims.UserID, claims.SessionID)
 	if err != nil {
 		return "", "", err
 	}
 
-	newRefreshToken, err := s.jwtService.GenerateRefreshToken(claims.UserID)
-	if err != nil {
-		return "", "", err
-	}
-
-	// 4. Update Redis (Rotate)
-	err = s.blacklist.RevokeRefreshToken(ctx, claims.UserID, newRefreshToken, time.Now().Add(7*24*time.Hour))
+	newRefreshToken, err := s.jwtService.GenerateRefreshToken(claims.UserID, claims.SessionID)
 	if err != nil {
 		return "", "", err
 	}
