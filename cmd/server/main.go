@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 
-	//"github.com/auth_service/cmd/console"
 	"github.com/auth_service/global"
 	"github.com/auth_service/internal/handler"
 	"github.com/auth_service/internal/initialize"
@@ -28,7 +27,7 @@ func main() {
 	auth_handler := handler.NewAuthHandler(auth_service)
 
 	auth_middleware := middleware.NewAuthMiddleware(jwtService, blacklist)
-	authRouter := auth_router.NewAuthRouter(auth_handler, auth_middleware.AuthenticateToken())
+	authRouter := auth_router.NewAuthRouter(auth_handler, auth_middleware)
 
 	healthHandler := handler.NewHealthHandler()
 	healthRouter := health_check.NewHealthRouter(healthHandler)

@@ -26,3 +26,11 @@ func abortUnauthorized(c *gin.Context, msg string) {
 		"error": msg,
 	})
 }
+
+// func emailValidationMiddleware(c *gin.Context, email string) error  {
+// 	emailString, err := extractBearerToken(email, "Email")
+// 	if err != nil {
+// 		return errors.New("No Email")
+// 	}
+// 	if email
+// }
