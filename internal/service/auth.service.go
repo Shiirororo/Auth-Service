@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/auth_service/internal/repository"
+	"github.com/auth_service/internal/utils/random"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,6 +35,13 @@ type AuthServiceInterface interface {
 
 // Should I add interface here?
 func (s *AuthService) RegisterService(ctx context.Context, username string, password string, email string) error {
+	// 0. Hash email
+	// 1. Check email exists in DB
+	// 2. new OTP
+	otp := random.GenerateOPT6Digit()
+	fmt.Printf("OTP: %d\n", otp)
+	// 3. Save OTP in Redis
+	// 4. Send OTP to email
 	err := s.authRepo.CreateNewUser(ctx, username, password, email)
 
 	return err
@@ -72,6 +81,7 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 }
 
 func (s *AuthService) LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error {
+
 	return s.blacklist.BlacklistSession(ctx, sessionID, ttl)
 }
 
@@ -104,6 +114,5 @@ func (s *AuthService) RefreshService(ctx context.Context, refreshToken string) (
 	if err != nil {
 		return "", "", err
 	}
-
 	return newAccessToken, newRefreshToken, nil
 }

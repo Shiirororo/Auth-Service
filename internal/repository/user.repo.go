@@ -17,7 +17,9 @@ type authRepository struct {
 type AuthRepository interface {
 	FindByUsername(ctx context.Context, username string) (*po.AuthUser, error)
 	UpdateLastLogin(ctx context.Context, userID string) error
+	GetUserByEmail(ctx context.Context, email string) (*po.AuthUser, error)
 	CreateNewUser(ctx context.Context, usename string, password string, email string) error
+	GetUserByUserID(ctx context.Context, userID string) (*po.AuthUser, error)
 }
 
 func NewAuthRepository(db *gorm.DB) AuthRepository {
@@ -38,7 +40,7 @@ func (r *authRepository) FindByUsername(ctx context.Context, username string) (*
 	return &user, nil
 }
 
-func (r *authRepository) GetUser(ctx context.Context, userID uuid.UUID) (*po.AuthUser, error) {
+func (r *authRepository) GetUserByUserID(ctx context.Context, userID string) (*po.AuthUser, error) {
 	var user po.AuthUser
 	err := r.db.
 		Where("id = ?", userID).

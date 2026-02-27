@@ -21,7 +21,7 @@ type JWTService interface {
 	ParseRefreshToken(tokenString string) (*Claims, error)
 }
 
-func NewJWTSToken(secret string) *jwtToken {
+func NewJWTSToken(secret string) JWTService {
 	return &jwtToken{
 		secret:     secret,
 		accessTTL:  15 * time.Minute,
@@ -102,7 +102,7 @@ func (s *jwtToken) ParseRefreshToken(tokenString string) (*Claims, error) {
 
 func (s *jwtToken) parseToken(tokenString string) (*Claims, error) {
 	if len(s.secret) == 0 {
-		return nil, errors.New("configuration error: JWT_SECRET is not set")
+		return nil, errors.New("configuration error: JWT SECRET is not set")
 	}
 
 	claims := &Claims{}

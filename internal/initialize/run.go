@@ -2,19 +2,9 @@ package initialize
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/auth_service/global"
-	"github.com/joho/godotenv"
 )
-
-func LoadEnv() {
-	_ = godotenv.Load()
-
-	if os.Getenv("JWT_SECRET") == "" {
-		return
-	}
-}
 
 func Run() {
 
@@ -22,9 +12,8 @@ func Run() {
 	m := global.Config.Databases
 	fmt.Println("Loading MySQL configuration", m.Username, m.Password)
 	InitLogger()
-	LoadEnv()
 	InitMySQL()
 	InitRedis()
-
+	InitJWT()
 	fmt.Println("Successfully Initialized ")
 }

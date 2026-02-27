@@ -7,31 +7,31 @@ import (
 )
 
 type AuthRouter struct {
-	Handler    *handler.AuthHandler
-	Middleware *middleware.AuthMiddleware
+	authHandler    *handler.AuthHandler
+	authMiddleware *middleware.AuthMiddleware
 }
 
-func NewAuthRouter(Handler *handler.AuthHandler, Middleware *middleware.AuthMiddleware) *AuthRouter {
+func NewAuthRouter(authHandler *handler.AuthHandler, authMiddleware *middleware.AuthMiddleware) *AuthRouter {
 	return &AuthRouter{
-		Handler:    Handler,
-		Middleware: Middleware,
+		authHandler:    authHandler,
+		authMiddleware: authMiddleware,
 	}
 }
 func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {
 	//public router
 	auth := Router.Group("/auth")
-	//AUTH := Router.Group("/auth")
+
 	{
-		auth.POST("/login", ar.Handler.LoginHandler)
-		auth.POST("/refresh-token", ar.Handler.RefreshHandler)
-		auth.POST("/register", ar.Handler.RegisterHandler)
+		auth.POST("/login", ar.authHandler.LoginHandler)
+		auth.POST("/refresh-token", ar.authHandler.RefreshHandler)
+		auth.POST("/register", ar.authHandler.RegisterHandler)
 	}
 
 	//private router
 	private := auth.Group("/")
-	private.Use(ar.Middleware.AuthenticateToken())
+	private.Use(ar.authMiddleware.AuthenticateToken())
 	{
-		private.GET("/get_info")
-		private.POST("/logout", ar.Handler.LogoutHandler)
+		private.GET("/user_info" /*ar.Handler.GetUserInfoHandler*/)
+		private.POST("/logout", ar.authHandler.LogoutHandler)
 	}
 }
