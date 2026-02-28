@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/auth_service/internal/repository"
-	"github.com/auth_service/internal/utils/random"
 	"github.com/google/uuid"
+	"github.com/user_service/internal/repository"
+	"github.com/user_service/internal/utils/random"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -64,7 +64,7 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 		return "", "", errors.New("Invalid credentials")
 	}
 	sessionID := uuid.NewString()
-
+	s.authRepo.UpdateLastLogin(ctx, user.ID)
 	accessToken, err := s.jwtService.GenerateAccessToken(user.ID, sessionID)
 	if err != nil {
 		return "", "", err
@@ -74,8 +74,6 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	if err != nil {
 		return "", "", err
 	}
-
-	s.authRepo.UpdateLastLogin(ctx, user.ID)
 
 	return accessToken, refreshToken, nil
 }

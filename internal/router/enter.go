@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/auth_service/internal/router/auth_router"
-	"github.com/auth_service/internal/router/health_check"
+	"github.com/user_service/internal/router/auth_router"
+	"github.com/user_service/internal/router/health_check"
 )
 
 type Router struct {

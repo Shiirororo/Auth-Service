@@ -1,9 +1,9 @@
 package initialize
 
 import (
-	"github.com/auth_service/global"
-	"github.com/auth_service/internal/router"
 	"github.com/gin-gonic/gin"
+	"github.com/user_service/global"
+	"github.com/user_service/internal/router"
 )
 
 func InitRouter(r *gin.Engine) {

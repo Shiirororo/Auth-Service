@@ -3,8 +3,8 @@ package logger
 import (
 	"os"
 
-	"github.com/auth_service/pkg/settings"
 	"github.com/natefinch/lumberjack"
+	"github.com/user_service/pkg/settings"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

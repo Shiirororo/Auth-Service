@@ -3,8 +3,8 @@ package initialize
 import (
 	"fmt"
 
-	"github.com/auth_service/global"
 	"github.com/spf13/viper"
+	"github.com/user_service/global"
 )
 
 func LoadConfig() {

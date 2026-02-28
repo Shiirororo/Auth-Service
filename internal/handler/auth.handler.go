@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/auth_service/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/user_service/internal/service"
 )
 
 type AuthHandler struct {

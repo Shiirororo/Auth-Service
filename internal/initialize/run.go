@@ -3,7 +3,7 @@ package initialize
 import (
 	"fmt"
 
-	"github.com/auth_service/global"
+	"github.com/user_service/global"
 )
 
 func Run() {

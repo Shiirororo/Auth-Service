@@ -1,9 +1,9 @@
 package global
 
 import (
-	"github.com/auth_service/pkg/logger"
-	"github.com/auth_service/pkg/settings"
 	"github.com/redis/go-redis/v9"
+	"github.com/user_service/pkg/logger"
+	"github.com/user_service/pkg/settings"
 	"gorm.io/gorm"
 )
 

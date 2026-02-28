@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/auth_service/global"
-	"github.com/auth_service/internal/initialize"
-	"github.com/auth_service/internal/router"
-	"github.com/auth_service/internal/wire"
 	"github.com/gin-gonic/gin"
+	"github.com/user_service/global"
+	"github.com/user_service/internal/initialize"
+	"github.com/user_service/internal/router"
+	"github.com/user_service/internal/wire"
 )
 
 func main() {

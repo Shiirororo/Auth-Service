@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/auth_service/internal/po"
 	"github.com/google/uuid"
+	"github.com/user_service/internal/po"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -30,6 +30,7 @@ func (r *authRepository) FindByUsername(ctx context.Context, username string) (*
 	var user po.AuthUser
 
 	err := r.db.
+		WithContext(ctx).
 		Where("username = ?", username).
 		First(&user).Error
 
@@ -43,6 +44,7 @@ func (r *authRepository) FindByUsername(ctx context.Context, username string) (*
 func (r *authRepository) GetUserByUserID(ctx context.Context, userID string) (*po.AuthUser, error) {
 	var user po.AuthUser
 	err := r.db.
+		WithContext(ctx).
 		Where("id = ?", userID).
 		First(&user).Error
 
@@ -66,7 +68,7 @@ func (r *authRepository) CreateNewUser(ctx context.Context, username string, pas
 		Email:        email,
 	}
 
-	err = r.db.Create(&NewUser).Error
+	err = r.db.WithContext(ctx).Create(&NewUser).Error
 	return err
 }
 
@@ -74,6 +76,7 @@ func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (*po.
 	var user po.AuthUser
 
 	err := r.db.
+		WithContext(ctx).
 		Where("email = ?", email).
 		First(&user).Error
 

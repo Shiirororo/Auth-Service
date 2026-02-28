@@ -1,8 +1,8 @@
 package health_check
 
 import (
-	"github.com/auth_service/internal/handler"
 	"github.com/gin-gonic/gin"
+	"github.com/user_service/internal/handler"
 )
 
 type HealthRouter struct {

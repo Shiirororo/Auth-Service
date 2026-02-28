@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/auth_service/internal/service"
+	"github.com/user_service/internal/service"
 )
 
 func InitJWT() service.JWTService {

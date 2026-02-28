@@ -1,9 +1,9 @@
 package auth_router
 
 import (
-	"github.com/auth_service/internal/handler"
-	"github.com/auth_service/internal/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/user_service/internal/handler"
+	"github.com/user_service/internal/middleware"
 )
 
 type AuthRouter struct {

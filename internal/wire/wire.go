@@ -4,16 +4,16 @@
 package wire
 
 import (
-	"github.com/auth_service/internal/handler"
-	"github.com/auth_service/internal/initialize"
-	"github.com/auth_service/internal/middleware"
-	"github.com/auth_service/internal/repository"
-	"github.com/auth_service/internal/router"
-	"github.com/auth_service/internal/router/auth_router"
-	"github.com/auth_service/internal/router/health_check"
-	"github.com/auth_service/internal/service"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
+	"github.com/user_service/internal/handler"
+	"github.com/user_service/internal/initialize"
+	"github.com/user_service/internal/middleware"
+	"github.com/user_service/internal/repository"
+	"github.com/user_service/internal/router"
+	"github.com/user_service/internal/router/auth_router"
+	"github.com/user_service/internal/router/health_check"
+	"github.com/user_service/internal/service"
 	"gorm.io/gorm"
 )
 

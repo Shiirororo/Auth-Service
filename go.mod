@@ -1,4 +1,4 @@
-module github.com/auth_service
+module github.com/user_service
 
 go 1.25.5
 

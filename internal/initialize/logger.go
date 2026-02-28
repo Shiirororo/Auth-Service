@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"github.com/auth_service/global"
-	"github.com/auth_service/pkg/logger"
+	"github.com/user_service/global"
+	"github.com/user_service/pkg/logger"
 )
 
 func InitLogger() {

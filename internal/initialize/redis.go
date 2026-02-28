@@ -3,8 +3,8 @@ package initialize
 import (
 	"fmt"
 
-	"github.com/auth_service/global"
 	"github.com/redis/go-redis/v9"
+	"github.com/user_service/global"
 )
 
 func InitRedis() {
