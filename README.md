@@ -12,3 +12,6 @@ Detailed endpoint instructions can be found in [API_DOCUMENTATION.md](API_DOCUME
 - **Session-based Blacklist**: Logout revokes the entire session ID.
 - **JWT Token Rotation**: Secure refresh token flow with JTI blocking.
 - **Layered Design**: Adheres to SOLID principles for maintainability.
+
+
+wow
