@@ -26,14 +26,20 @@ func NewRateLimitMiddleware(rdb *redis.Client) RateLimitMiddlewareInterface {
 	return &RateLimitMiddleware{rdb: rdb}
 }
 
+func getClientIP(ctx *gin.Context) string {
+	ip := ctx.ClientIP()
+
+	return ip
+}
+
 func (r *RateLimitMiddleware) Allow(keyPrefix string, limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
-		ip := c.ClientIP()
+		ip := getClientIP(c)
 
 		// Attempt to get a user identifier from the context, if set by an auth middleware
 		// You can customize the key "username" or "userID" based on your actual auth logic.
-		username := c.GetString("username")
+		username := c.GetString("user-id")
 
 		var key string
 		if username != "" {

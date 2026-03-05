@@ -10,3 +10,7 @@ func GenerateOPT6Digit() int {
 	otp := 100000 + rng.Intn(900000)
 	return otp
 }
+
+func HashEmail(email string) string {
+	return " "
+}

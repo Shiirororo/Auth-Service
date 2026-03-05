@@ -60,9 +60,12 @@ func (r *authRepository) CreateNewUser(ctx context.Context, username string, pas
 	if err != nil {
 		return err
 	}
-
+	Idd, err := uuid.NewV7()
+	if err != nil {
+		return err
+	}
 	NewUser := po.AuthUser{
-		ID:           uuid.NewString(),
+		ID:           Idd.String(),
 		Username:     username,
 		PasswordHash: string(hashPass),
 		Email:        email,
