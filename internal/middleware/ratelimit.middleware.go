@@ -102,32 +102,38 @@ func (r *RateLimitMiddleware) AllowRequest(ctx context.Context, service string, 
 	now := time.Now().UnixMilli()
 	windowStart := now - window.Milliseconds()
 
-	// Remove old request count
-	err := r.client.ZRemRangeByScore(ctx, key, "0", fmt.Sprintf("%d", windowStart)).Err()
+	pipe := r.client.TxPipeline()
+	removeCmd := pipe.ZRemRangeByScore(ctx, key, "0", fmt.Sprintf("%d", windowStart))
+	countCmd := pipe.ZCard(ctx, key)
 
-	if err != nil {
+	if _, err := pipe.Exec(ctx); err != nil {
 		return false, err
 	}
 
-	//Count
-
-	count, err := r.client.ZCard(ctx, key).Result()
-	if err != nil {
-		return false, err
+	if removeCmd.Err() != nil {
+		return false, removeCmd.Err()
 	}
+	if countCmd.Err() != nil {
+		return false, countCmd.Err()
+	}
+
+	count := countCmd.Val()
 	if count >= 10 {
 		return false, nil
 	}
-	//Update
-	err = r.client.ZAdd(ctx, key, redis.Z{
+
+	member := fmt.Sprintf("%d:%d", now, time.Now().UnixNano())
+	if err := r.client.ZAdd(ctx, key, redis.Z{
 		Score:  float64(now),
-		Member: now,
-	}).Err()
-	if err != nil {
+		Member: member,
+	}).Err(); err != nil {
 		return false, err
 	}
 
-	r.client.Expire(ctx, key, window)
+	if err := r.client.Expire(ctx, key, window).Err(); err != nil {
+		return false, err
+	}
+
 	return true, nil
 }
 

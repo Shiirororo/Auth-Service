@@ -29,8 +29,9 @@ func SetPool() {
 	if err != nil {
 		panic(err.Error)
 	}
-	sqlDb.SetConnMaxIdleTime(time.Duration(m.MaxIdleConns))
+	sqlDb.SetMaxIdleConns(m.MaxIdleConns)
 	sqlDb.SetMaxOpenConns(m.MaxOpenConns)
-	sqlDb.SetConnMaxLifetime(time.Duration(m.ConnMaxLifetime))
+	sqlDb.SetConnMaxLifetime(time.Duration(m.ConnMaxLifetime) * time.Second)
+	sqlDb.SetConnMaxIdleTime(10 * time.Minute)
 
 }
