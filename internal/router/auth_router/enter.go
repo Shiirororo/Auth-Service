@@ -9,12 +9,15 @@ import (
 type AuthRouter struct {
 	authHandler    *handler.AuthHandler
 	authMiddleware *middleware.AuthMiddleware
+	rateLimit      *middleware.RateLimitMiddleware
 }
 
-func NewAuthRouter(authHandler *handler.AuthHandler, authMiddleware *middleware.AuthMiddleware) *AuthRouter {
+func NewAuthRouter(authHandler *handler.AuthHandler, authMiddleware *middleware.AuthMiddleware, ratelimitMiddleware *middleware.RateLimitMiddleware) *AuthRouter {
 	return &AuthRouter{
 		authHandler:    authHandler,
 		authMiddleware: authMiddleware,
+
+		rateLimit: ratelimitMiddleware,
 	}
 }
 func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {

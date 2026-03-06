@@ -8,8 +8,9 @@ type Config struct {
 	Logger    LogSetting      `mapstructure:"logger"`
 }
 type ServerSetting struct {
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Port        int    `mapstructure:"port"`
+	Mode        string `mapstructure:"mode"`
+	Max_Request int    `mapstructure:"max_concurrent_request"`
 }
 type RedisSetting struct {
 	Host     string `mapstructure:"host"`

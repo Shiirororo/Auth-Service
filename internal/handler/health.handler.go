@@ -13,5 +13,5 @@ func NewHealthHandler() *HealthHandler {
 }
 
 func (h *HealthHandler) Ping(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	c.JSON(http.StatusOK, gin.H{"status": "ok, pong me bich"})
 }

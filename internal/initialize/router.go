@@ -3,6 +3,7 @@ package initialize
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/user_service/global"
+	"github.com/user_service/internal/middleware"
 	"github.com/user_service/internal/router"
 )
 
@@ -17,12 +18,13 @@ func InitRouter(r *gin.Engine) {
 	HealthRouter := router.RouterGroupApp.Health
 
 	api := r.Group("/v1")
-
+	middleware.CleanUpClients()
+	// api.Use(middleware.ConcurenncyLimiterHandler())
 	{
 		AuthRouter.InitAuthRouter(api) //<- MainGroup
 		HealthRouter.InitHealthRouter(api)
 	}
-
+	r.Use(middleware.ConcurrencyLimiterHandler())
 }
 
 //Middleware use here:

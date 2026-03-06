@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/user_service/internal/service"
+	"github.com/user_service/pkg/request"
 )
 
 type AuthHandler struct {
@@ -18,14 +19,11 @@ func NewAuthHandler(authService service.AuthServiceInterface) *AuthHandler {
 
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
-	var req struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
+	var req = request.LoginRequest{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		//TODO: Hide server status
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -68,9 +66,7 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 }
 
 func (h *AuthHandler) RefreshHandler(c *gin.Context) {
-	var req struct {
-		RefreshToken string `json:"refresh_token" binding:"required"`
-	}
+	var req = request.RefreshRequest{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -90,11 +86,7 @@ func (h *AuthHandler) RefreshHandler(c *gin.Context) {
 }
 
 func (h *AuthHandler) RegisterHandler(c *gin.Context) {
-	var req struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-		Email    string `json:"email" binding:"required,email"`
-	}
+	var req = request.RegisterRequest{}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return

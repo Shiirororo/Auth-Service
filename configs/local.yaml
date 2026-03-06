@@ -1,6 +1,7 @@
 server:
   port: 6969
   mode: "dev"
+  max_concurrent_request: 1000
 grafana:
   url: "127.0.0.1:3001"
   username: "admin"

@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Middleware struct {
+	Auth      *AuthMiddleware
+	RateLimit *RateLimitMiddleware
+}
+
+/*
+	This is Auth related middleware
+
+*/
+
 func extractBearerToken(c *gin.Context, requiredHeader string) (string, error) {
 	Header := c.GetHeader(requiredHeader)
 	if Header == "" {
@@ -26,11 +36,3 @@ func abortUnauthorized(c *gin.Context, msg string) {
 		"error": msg,
 	})
 }
-
-// func emailValidationMiddleware(c *gin.Context, email string) error  {
-// 	emailString, err := extractBearerToken(email, "Email")
-// 	if err != nil {
-// 		return errors.New("No Email")
-// 	}
-// 	if email
-// }
