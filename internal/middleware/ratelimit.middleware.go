@@ -16,7 +16,8 @@ import (
 var (
 	mu        sync.Mutex
 	clients   = make(map[string]*Client)
-	semaphore = make(chan struct{}, global.Config.Server.Max_Request) //Make it changable through setting
+	semaphore chan struct{}
+	once      sync.Once
 )
 
 type Client struct {
@@ -36,20 +37,6 @@ func getClientIP(ctx *gin.Context) string {
 	}
 	return ip
 }
-func getRateLimiter(ip string) *rate.Limiter {
-	mu.Lock()
-	client, exist := clients[ip]
-	if !exist {
-		limiter := rate.NewLimiter(5, 10)
-		newClient := &Client{limiter, time.Now()}
-		clients[ip] = newClient
-
-		return limiter
-	}
-	client.lastSeen = time.Now()
-	mu.Unlock()
-	return client.limiter
-}
 
 func CleanUpClients() {
 	for {
@@ -64,20 +51,6 @@ func CleanUpClients() {
 	}
 }
 
-func (r *RateLimitMiddleware) RateLimiter() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ip := getClientIP(c)
-
-		limiter := getRateLimiter(ip)
-
-		if !limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Too many request",
-			})
-		}
-	}
-}
-
 /*
 	Global ratelimit
 
@@ -85,6 +58,10 @@ func (r *RateLimitMiddleware) RateLimiter() gin.HandlerFunc {
 
 func ConcurrencyLimiterHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		once.Do(func() {
+			semaphore = make(chan struct{}, global.Config.Server.Max_Request)
+		})
+
 		select {
 		case semaphore <- struct{}{}:
 			defer func() { <-semaphore }()

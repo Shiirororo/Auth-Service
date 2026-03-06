@@ -16,15 +16,14 @@ func InitRouter(r *gin.Engine) {
 	}
 	AuthRouter := router.RouterGroupApp.Auth
 	HealthRouter := router.RouterGroupApp.Health
-
+	r.Use(middleware.ConcurrencyLimiterHandler())
 	api := r.Group("/v1")
-	middleware.CleanUpClients()
+	go middleware.CleanUpClients()
 	// api.Use(middleware.ConcurenncyLimiterHandler())
 	{
 		AuthRouter.InitAuthRouter(api) //<- MainGroup
 		HealthRouter.InitHealthRouter(api)
 	}
-	r.Use(middleware.ConcurrencyLimiterHandler())
 }
 
 //Middleware use here:

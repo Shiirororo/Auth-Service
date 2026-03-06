@@ -1,4 +1,4 @@
-APP_NAME=auth_service
+APP_NAME=user_service
 MAIN=cmd/server/main.go
 
 include .env

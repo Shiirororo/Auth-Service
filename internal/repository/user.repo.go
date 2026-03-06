@@ -91,7 +91,6 @@ func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (*po.
 }
 func (r *authRepository) UpdateLastLogin(ctx context.Context, userID string) error {
 	now := time.Now()
-
 	return r.db.
 		WithContext(ctx).
 		Model(&po.AuthUser{}).

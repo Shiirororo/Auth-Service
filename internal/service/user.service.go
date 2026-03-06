@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/user_service/internal/repository"
 	"github.com/user_service/internal/utils/random"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -31,6 +32,7 @@ type AuthServiceInterface interface {
 	LoginService(ctx context.Context, username string, password string) (string, string, error)
 	LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
+	updateLastLoginBestEffort(userID string)
 }
 
 // Should I add interface here?
@@ -52,15 +54,17 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	if err != nil {
 		return "", "", errors.New("Invalid credentials, USER NOT FOUND")
 	}
-
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(user.PasswordHash),
+		[]byte(password),
+	)
+	if err != nil {
+		return "", "", errors.New("Invalid credentials, PASSWORD NOT MATCH")
+	}
 	g, ctx := errgroup.WithContext(ctx)
 
 	var accessToken, refreshToken string
 	sessionID := uuid.NewString()
-	g.Go(func() error {
-		return s.authRepo.UpdateLastLogin(ctx, user.ID)
-	})
-
 	g.Go(func() error {
 		var err error
 		accessToken, err = s.jwtService.GenerateAccessToken(user.ID, sessionID)
@@ -76,8 +80,13 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	if err := g.Wait(); err != nil {
 		return "", "", err
 	}
-
+	go s.updateLastLoginBestEffort(user.ID)
 	return accessToken, refreshToken, nil
+}
+func (s *AuthService) updateLastLoginBestEffort(userID string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	_ = s.authRepo.UpdateLastLogin(ctx, userID)
 }
 func (s *AuthService) LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error {
 

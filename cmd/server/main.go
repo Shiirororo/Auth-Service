@@ -25,7 +25,7 @@ func main() {
 
 	r := gin.New()
 	initialize.InitRouter(r)
-	r.Run(":" + strconv.Itoa(global.Config.Server.Port))
-	fmt.Println("Server is running at port: ")
+	fmt.Println("Server is running at port: ", global.Config.Server.Port)
 	fmt.Println("Auth Service is running...")
+	r.Run(":" + strconv.Itoa(global.Config.Server.Port))
 }

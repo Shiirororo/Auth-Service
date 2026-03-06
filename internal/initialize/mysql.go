@@ -20,6 +20,7 @@ func InitMySQL() {
 		panic("Failed to connected to database")
 	}
 	global.DB = db
+	SetPool()
 }
 
 func SetPool() {

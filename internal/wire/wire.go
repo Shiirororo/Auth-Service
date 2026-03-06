@@ -25,6 +25,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		service.NewAuthService,
 		handler.NewAuthHandler,
 		middleware.NewAuthMiddleware,
+		middleware.NewRateLimitMiddleware,
 		auth_router.NewAuthRouter,
 		handler.NewHealthHandler,
 		health_check.NewHealthRouter,

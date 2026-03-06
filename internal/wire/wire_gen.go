@@ -28,9 +28,8 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 	authServiceInterface := service.NewAuthService(authRepository, tokenBlacklist, jwtService)
 	authHandler := handler.NewAuthHandler(authServiceInterface)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService, tokenBlacklist)
-
-	ratelimit := middleware.NewRateLimitMiddleware(rdb)
-	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, ratelimit)
+	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)
+	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
 	healthHandler := handler.NewHealthHandler()
 	healthRouter := health_check.NewHealthRouter(healthHandler)
 	routerRouter := router.NewRouter(authRouter, healthRouter)
