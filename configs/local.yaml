@@ -13,8 +13,8 @@ databases:
   dbname: auth_db
   username: auth_user
   password: auth_password
-  maxIdleConns: 20
-  maxOpenConns: 200
+  maxIdleConns: 200
+  maxOpenConns: 600
   connMaxLifetime: 3600
 security:
   jwt: 
