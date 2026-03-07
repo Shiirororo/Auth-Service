@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitMySQL() {
+func InitMySQL() *gorm.DB {
 	m := global.Config.Databases
 	dsn := "%s:%s@tcp(%s:%v)/%s?charset=utf8mb4&parseTime=True&loc=Local"
 	var s = fmt.Sprintf(dsn, m.Username, m.Password, m.Host, m.Port, m.DBName)
@@ -19,13 +19,13 @@ func InitMySQL() {
 	if err != nil {
 		panic("Failed to connected to database")
 	}
-	global.DB = db
-	SetPool()
+	SetPool(db)
+	return db
 }
 
-func SetPool() {
+func SetPool(db *gorm.DB) {
 	m := global.Config.Databases
-	sqlDb, err := global.DB.DB()
+	sqlDb, err := db.DB()
 	if err != nil {
 		panic(err.Error)
 	}

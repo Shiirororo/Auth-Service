@@ -3,19 +3,19 @@ package worker
 import (
 	"context"
 
+	"github.com/user_service/internal/auth"
 	"github.com/user_service/internal/event"
-	"github.com/user_service/internal/repository"
 )
 
 type LoginWorker struct {
-	authRepo repository.AuthRepository
+	authRepo auth.AuthRepository
 	queue    chan string
 	workers  int
 }
 
 // NewLoginWorker creates a worker pool that handles login events.
 // It subscribes to the dispatcher so it can receive events.
-func NewLoginWorker(authRepo repository.AuthRepository, dispatcher *event.Dispatcher, workers int) *LoginWorker {
+func NewLoginWorker(authRepo auth.AuthRepository, dispatcher *event.Dispatcher, workers int) *LoginWorker {
 	worker := &LoginWorker{
 		authRepo: authRepo,
 		queue:    make(chan string, 1000), // Buffer to handle login spikes Without Blocking

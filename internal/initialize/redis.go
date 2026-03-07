@@ -7,7 +7,7 @@ import (
 	"github.com/user_service/global"
 )
 
-func InitRedis() {
+func InitRedis() *redis.Client {
 	r := global.Config.Redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%v", r.Host, r.Port),
@@ -17,7 +17,6 @@ func InitRedis() {
 	})
 
 	//TODO: Do check connection
-	global.Rdb = rdb
 	fmt.Println("Connected to redis")
-
+	return rdb
 }

@@ -2,15 +2,15 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/internal/service"
+	"github.com/user_service/internal/auth"
 )
 
 type AuthMiddleware struct {
-	authService service.JWTService
-	tokenRepo   service.TokenBlacklist
+	authService auth.JWTService
+	tokenRepo   auth.TokenBlacklist
 }
 
-func NewAuthMiddleware(authService service.JWTService, tokenRepo service.TokenBlacklist) *AuthMiddleware {
+func NewAuthMiddleware(authService auth.JWTService, tokenRepo auth.TokenBlacklist) *AuthMiddleware {
 	return &AuthMiddleware{
 		authService: authService,
 		tokenRepo:   tokenRepo,

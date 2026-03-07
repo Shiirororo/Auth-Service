@@ -8,33 +8,32 @@ package wire
 
 import (
 	"github.com/redis/go-redis/v9"
+	"github.com/user_service/internal/auth"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
-	"github.com/user_service/internal/handler"
+	"github.com/user_service/internal/health"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
-	"github.com/user_service/internal/repository"
 	"github.com/user_service/internal/router"
 	"github.com/user_service/internal/router/auth_router"
 	"github.com/user_service/internal/router/health_check"
-	"github.com/user_service/internal/service"
 	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
 func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
-	authRepository := repository.NewAuthRepository(db)
-	tokenBlacklist := service.NewRedisBlacklist(rdb)
+	authRepository := auth.NewAuthRepository(db)
+	tokenBlacklist := auth.NewRedisBlacklist(rdb)
 	jwtService := initialize.InitJWT()
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
-	authServiceInterface := service.NewAuthService(authRepository, tokenBlacklist, jwtService, dispatcher)
-	authHandler := handler.NewAuthHandler(authServiceInterface)
+	authServiceInterface := auth.NewAuthService(authRepository, tokenBlacklist, jwtService, dispatcher)
+	authHandler := auth.NewAuthHandler(authServiceInterface)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService, tokenBlacklist)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)
 	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
-	healthHandler := handler.NewHealthHandler()
+	healthHandler := health.NewHealthHandler()
 	healthRouter := health_check.NewHealthRouter(healthHandler)
 	int2 := provideWorkerCount()
 	loginWorker := worker.NewLoginWorker(authRepository, dispatcher, int2)

@@ -14,9 +14,9 @@ import (
 
 func main() {
 	//go console.Console()
-	initialize.Run()
+	db, rdb := initialize.Run()
 
-	routerApp, err := wire.InitRouter(global.DB, global.Rdb)
+	routerApp, err := wire.InitRouter(db, rdb)
 	if err != nil {
 		fmt.Printf("Failed to initialize router: %v\n", err)
 		return

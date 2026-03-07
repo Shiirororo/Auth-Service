@@ -6,16 +6,15 @@ package wire
 import (
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
+	"github.com/user_service/internal/auth"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
-	"github.com/user_service/internal/handler"
+	"github.com/user_service/internal/health"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
-	"github.com/user_service/internal/repository"
 	"github.com/user_service/internal/router"
 	"github.com/user_service/internal/router/auth_router"
 	"github.com/user_service/internal/router/health_check"
-	"github.com/user_service/internal/service"
 	"gorm.io/gorm"
 )
 
@@ -33,15 +32,15 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		provideWorkerCount,
 		event.NewDispatcher,
 		worker.NewLoginWorker,
-		repository.NewAuthRepository,
+		auth.NewAuthRepository,
 		initialize.InitJWT,
-		service.NewRedisBlacklist,
-		service.NewAuthService,
-		handler.NewAuthHandler,
+		auth.NewRedisBlacklist,
+		auth.NewAuthService,
+		auth.NewAuthHandler,
 		middleware.NewAuthMiddleware,
 		middleware.NewRateLimitMiddleware,
 		auth_router.NewAuthRouter,
-		handler.NewHealthHandler,
+		health.NewHealthHandler,
 		health_check.NewHealthRouter,
 		router.NewRouter,
 	)
