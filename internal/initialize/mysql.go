@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/user_service/global"
+	"github.com/user_service/pkg/settings"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-func InitMySQL() *gorm.DB {
-	m := global.Config.Databases
+func InitMySQL(config settings.Config) *gorm.DB {
+	m := config.Databases
 	dsn := "%s:%s@tcp(%s:%v)/%s?charset=utf8mb4&parseTime=True&loc=Local"
 	var s = fmt.Sprintf(dsn, m.Username, m.Password, m.Host, m.Port, m.DBName)
 	db, err := gorm.Open(mysql.Open(s), &gorm.Config{
@@ -19,12 +19,12 @@ func InitMySQL() *gorm.DB {
 	if err != nil {
 		panic("Failed to connected to database")
 	}
-	SetPool(db)
+	SetPool(db, config)
 	return db
 }
 
-func SetPool(db *gorm.DB) {
-	m := global.Config.Databases
+func SetPool(db *gorm.DB, config settings.Config) {
+	m := config.Databases
 	sqlDb, err := db.DB()
 	if err != nil {
 		panic(err.Error)

@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	"github.com/user_service/global"
 	"golang.org/x/time/rate"
 )
 
@@ -75,10 +74,10 @@ func CleanUpClients() {
 
 */
 
-func ConcurrencyLimiterHandler() gin.HandlerFunc {
+func ConcurrencyLimiterHandler(maxRequest int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		once.Do(func() {
-			semaphore = make(chan struct{}, global.Config.Server.Max_Request)
+			semaphore = make(chan struct{}, maxRequest)
 		})
 
 		select {

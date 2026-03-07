@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/user_service/global"
+	"github.com/user_service/pkg/settings"
 )
 
-func InitRedis() *redis.Client {
-	r := global.Config.Redis
+func InitRedis(config settings.Config) *redis.Client {
+	r := config.Redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%v", r.Host, r.Port),
 		Password: r.Password,

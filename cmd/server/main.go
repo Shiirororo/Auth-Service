@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/global"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/router"
 	"github.com/user_service/internal/wire"
@@ -14,7 +13,7 @@ import (
 
 func main() {
 	//go console.Console()
-	db, rdb := initialize.Run()
+	db, rdb, config, _ := initialize.Run()
 
 	routerApp, err := wire.InitRouter(db, rdb)
 	if err != nil {
@@ -29,8 +28,8 @@ func main() {
 	go routerApp.LoginWorker.Start(ctx)
 
 	r := gin.New()
-	initialize.InitRouter(r)
-	fmt.Println("Server is running at port: ", global.Config.Server.Port)
+	initialize.InitRouter(r, config)
+	fmt.Println("Server is running at port: ", config.Server.Port)
 	fmt.Println("Auth Service is running...")
-	r.Run(":" + strconv.Itoa(global.Config.Server.Port))
+	r.Run(":" + strconv.Itoa(config.Server.Port))
 }
