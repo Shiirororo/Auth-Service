@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/repository"
 	"github.com/user_service/internal/utils/random"
 	"golang.org/x/crypto/bcrypt"
@@ -17,13 +18,15 @@ type AuthService struct {
 	authRepo   repository.AuthRepository
 	blacklist  TokenBlacklist
 	jwtService JWTService
+	dispatcher *event.Dispatcher
 }
 
-func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist, jwtService JWTService) AuthServiceInterface {
+func NewAuthService(authRepo repository.AuthRepository, blacklist TokenBlacklist, jwtService JWTService, dispatcher *event.Dispatcher) AuthServiceInterface {
 	return &AuthService{
 		authRepo:   authRepo,
 		blacklist:  blacklist,
 		jwtService: jwtService,
+		dispatcher: dispatcher,
 	}
 }
 
@@ -32,7 +35,6 @@ type AuthServiceInterface interface {
 	LoginService(ctx context.Context, username string, password string) (string, string, error)
 	LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
-	updateLastLoginBestEffort(userID string)
 }
 
 // Should I add interface here?
@@ -83,14 +85,15 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	if err := g.Wait(); err != nil {
 		return "", "", err
 	}
-	go s.updateLastLoginBestEffort(user.ID)
+
+	s.dispatcher.Dispatch(ctx, event.Event{
+		Type:    event.LoginEvent,
+		Payload: user.ID,
+	})
+
 	return accessToken, refreshToken, nil
 }
-func (s *AuthService) updateLastLoginBestEffort(userID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-	defer cancel()
-	_ = s.authRepo.UpdateLastLogin(ctx, userID)
-}
+
 func (s *AuthService) LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error {
 
 	return s.blacklist.BlacklistSession(ctx, sessionID, ttl)

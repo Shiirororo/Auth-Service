@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -22,6 +23,10 @@ func main() {
 	}
 
 	router.RouterGroupApp = routerApp
+
+	ctx := context.Background()
+	go routerApp.Dispatcher.Start(ctx)
+	go routerApp.LoginWorker.Start(ctx)
 
 	r := gin.New()
 	initialize.InitRouter(r)

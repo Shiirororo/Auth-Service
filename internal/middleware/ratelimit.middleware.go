@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -31,9 +32,26 @@ type Client struct {
 // rl:<prefix>:user:{username}
 // rl:<prefix>:ip_user:{ip}:{username}
 
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err == nil {
+		for _, address := range addrs {
+			if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil {
+					return ipnet.IP.String()
+				}
+			}
+		}
+	}
+	return "127.0.0.1"
+}
+
 func getClientIP(ctx *gin.Context) string {
 	ip := ctx.ClientIP()
-	if ip == "" {
+	switch ip {
+	case "127.0.0.1", "::1":
+		ip = getLocalIP()
+	case "":
 		ip = ctx.Request.RemoteAddr
 	}
 	return ip

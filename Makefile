@@ -10,7 +10,7 @@ wire:
 	wire ./internal/wire
 
 run: wire
-	go run $(MAIN)
+	go run $(MAIN) -v
 
 build: wire
 	go build -o bin/$(APP_NAME) $(MAIN)
