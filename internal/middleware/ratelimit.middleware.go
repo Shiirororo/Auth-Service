@@ -87,6 +87,7 @@ type RateLimitMiddleware struct {
 }
 type RateLimitInterface interface {
 	UpdateRequest(ctx context.Context, service string, ip string) error
+	AllowRequest(ctx context.Context, service_userid string, window time.Duration) (bool, error)
 }
 
 /*
@@ -97,8 +98,8 @@ func (r *RateLimitMiddleware) UpdateRequest(ctx context.Context, service string,
 	_, err := r.client.Incr(ctx, key).Result()
 	return err
 }
-func (r *RateLimitMiddleware) AllowRequest(ctx context.Context, service string, ip string, window time.Duration) (bool, error) {
-	key := fmt.Sprintf("ratelimit:%s:%s", service, ip)
+func (r *RateLimitMiddleware) AllowRequest(ctx context.Context, service_userid string, ip string, window time.Duration) (bool, error) {
+	key := fmt.Sprintf("ratelimit:%s:%s", service_userid, ip)
 	now := time.Now().UnixMilli()
 	windowStart := now - window.Milliseconds()
 
@@ -157,6 +158,12 @@ func (r *RateLimitMiddleware) UserLoginLimiter() gin.HandlerFunc {
 			})
 			return
 		}
+
+		c.Next()
+	}
+}
+func (r *RateLimitMiddleware) GetInforLimiter() gin.HandlerFunc {
+	return func(c *gin.Context) {
 
 		c.Next()
 	}
