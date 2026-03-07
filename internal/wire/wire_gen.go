@@ -9,6 +9,8 @@ package wire
 import (
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/internal/auth"
+	"github.com/user_service/internal/auth/infrastructure/persistence"
+	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
 	"github.com/user_service/internal/health"
@@ -23,20 +25,20 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
-	authRepository := auth.NewAuthRepository(db)
-	tokenBlacklist := auth.NewRedisBlacklist(rdb)
-	jwtService := initialize.InitJWT()
+	userRepository := persistence.NewUserRepository(db)
+	tokenBlacklist := commons.NewRedisBlacklist(rdb)
+	tokenMaker := initialize.InitJWT()
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
-	authServiceInterface := auth.NewAuthService(authRepository, tokenBlacklist, jwtService, dispatcher)
+	authServiceInterface := auth.NewAuthService(userRepository, tokenBlacklist, tokenMaker, dispatcher)
 	authHandler := auth.NewAuthHandler(authServiceInterface)
-	authMiddleware := middleware.NewAuthMiddleware(jwtService, tokenBlacklist)
+	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)
 	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
 	healthHandler := health.NewHealthHandler()
 	healthRouter := health_check.NewHealthRouter(healthHandler)
 	int2 := provideWorkerCount()
-	loginWorker := worker.NewLoginWorker(authRepository, dispatcher, int2)
+	loginWorker := worker.NewLoginWorker(userRepository, dispatcher, int2)
 	routerRouter := router.NewRouter(authRouter, healthRouter, dispatcher, loginWorker)
 	return routerRouter, nil
 }

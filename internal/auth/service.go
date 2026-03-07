@@ -7,20 +7,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/user_service/internal/auth/domain/entity"
+	"github.com/user_service/internal/auth/domain/repository"
+	"github.com/user_service/internal/auth/domain/vo"
+	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/utils/random"
+	"github.com/user_service/pkg/token"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/sync/errgroup"
 )
 
 type AuthService struct {
-	authRepo   AuthRepository
-	blacklist  TokenBlacklist
-	jwtService JWTService
+	authRepo   repository.UserRepository
+	blacklist  commons.TokenBlacklist
+	jwtService token.TokenMaker
 	dispatcher *event.Dispatcher
 }
 
-func NewAuthService(authRepo AuthRepository, blacklist TokenBlacklist, jwtService JWTService, dispatcher *event.Dispatcher) AuthServiceInterface {
+func NewAuthService(authRepo repository.UserRepository, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
 	return &AuthService{
 		authRepo:   authRepo,
 		blacklist:  blacklist,
@@ -38,16 +43,39 @@ type AuthServiceInterface interface {
 
 // Should I add interface here?
 func (s *AuthService) RegisterService(ctx context.Context, username string, password string, email string) error {
-	// 0. Hash email
-	// 1. Check email exists in DB
+	// 1. Create Domain Value Objects to validate integrity early
+	emailVo, err := vo.NewEmail(email)
+	if err != nil {
+		return err
+	}
+
+	passVo, err := vo.NewPassword(password)
+	if err != nil {
+		return err
+	}
+
 	// 2. new OTP
 	otp := random.GenerateOPT6Digit()
 	fmt.Printf("OTP: %d\n", otp)
 	// 3. Save OTP in Redis
 	// 4. Send OTP to email
-	err := s.authRepo.CreateNewUser(ctx, username, password, email)
 
-	return err
+	// 5. Hash Password explicitly for persistence
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(passVo.String()), 10)
+	if err != nil {
+		return err
+	}
+	hashedPassVo := vo.RestorePassword(string(hashPass))
+
+	// 6. Generate UUID and construct valid Domain Entity
+	id, err := uuid.NewV7()
+	if err != nil {
+		return err
+	}
+	user := entity.NewUser(id.String(), username, emailVo, hashedPassVo)
+
+	// 7. Persist to DB
+	return s.authRepo.CreateNewUser(ctx, user)
 }
 func (s *AuthService) LoginService(ctx context.Context, username string, password string) (string, string, error) {
 
@@ -58,8 +86,9 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	if err != nil {
 		return "", "", errors.New("Invalid credentials, USER NOT FOUND")
 	}
+
 	err = bcrypt.CompareHashAndPassword(
-		[]byte(user.PasswordHash),
+		[]byte(user.PasswordHash.String()),
 		[]byte(password),
 	)
 	if err != nil {

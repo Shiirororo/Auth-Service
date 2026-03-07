@@ -1,4 +1,4 @@
-package auth
+package token
 
 import (
 	"context"
@@ -14,14 +14,15 @@ type jwtToken struct {
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 }
-type JWTService interface {
+
+type TokenMaker interface {
 	GenerateAccessToken(userID string, sessionID string) (string, error)
 	GenerateRefreshToken(userID string, sessionID string) (string, error)
 	VerifyJWT(ctx context.Context, tokenString string) (*Claims, error)
 	ParseRefreshToken(tokenString string) (*Claims, error)
 }
 
-func NewJWTSToken(secret string) JWTService {
+func NewJWTMaker(secret string) TokenMaker {
 	return &jwtToken{
 		secret:     secret,
 		accessTTL:  15 * time.Minute,
@@ -55,8 +56,8 @@ func (s *jwtToken) GenerateAccessToken(userID string, sessionID string) (string,
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.secret))
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return t.SignedString([]byte(s.secret))
 }
 
 func (s *jwtToken) GenerateRefreshToken(userID string, sessionID string) (string, error) {
@@ -78,11 +79,11 @@ func (s *jwtToken) GenerateRefreshToken(userID string, sessionID string) (string
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.secret))
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return t.SignedString([]byte(s.secret))
 }
 
-// VerifyJWT parses and validates the token, checking against the blacklist
+// VerifyJWT parses and validates the token
 func (s *jwtToken) VerifyJWT(ctx context.Context, tokenString string) (*Claims, error) {
 	return s.parseToken(tokenString)
 }
@@ -107,11 +108,11 @@ func (s *jwtToken) parseToken(tokenString string) (*Claims, error) {
 
 	claims := &Claims{}
 
-	token, err := jwt.ParseWithClaims(
+	parsedToken, err := jwt.ParseWithClaims(
 		tokenString,
 		claims,
-		func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("unexpected signing method")
 			}
 			return []byte(s.secret), nil
@@ -125,7 +126,7 @@ func (s *jwtToken) parseToken(tokenString string) (*Claims, error) {
 		return nil, errors.New("invalid token")
 	}
 
-	if !token.Valid {
+	if !parsedToken.Valid {
 		return nil, errors.New("invalid token contents")
 	}
 

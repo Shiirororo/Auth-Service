@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/user_service/pkg/request"
+	"github.com/user_service/pkg/token"
 )
 
 type AuthHandler struct {
@@ -45,7 +46,7 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 		return
 	}
 
-	claims, ok := val.(*Claims)
+	claims, ok := val.(*token.Claims)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid claims type"})
 		return

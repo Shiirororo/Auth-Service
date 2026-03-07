@@ -4,13 +4,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/user_service/internal/auth"
+	"github.com/user_service/pkg/token"
 )
 
-func InitJWT() auth.JWTService {
+func InitJWT() token.TokenMaker {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		log.Fatal("No secret found in env")
 	}
-	return auth.NewJWTSToken(secret)
+	return token.NewJWTMaker(secret)
 }
