@@ -49,6 +49,9 @@ func (s *AuthService) RegisterService(ctx context.Context, username string, pass
 	return err
 }
 func (s *AuthService) LoginService(ctx context.Context, username string, password string) (string, string, error) {
+
+	//U DUMB U FORGOT TO REVOKE TOKEN IN THE SAME IP
+
 	user, err := s.authRepo.FindByUsername(ctx, username)
 
 	if err != nil {

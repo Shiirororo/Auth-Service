@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/global"
 	"golang.org/x/time/rate"
@@ -98,46 +99,47 @@ func (r *RateLimitMiddleware) UpdateRequest(ctx context.Context, service string,
 	_, err := r.client.Incr(ctx, key).Result()
 	return err
 }
-func (r *RateLimitMiddleware) AllowRequest(ctx context.Context, service_userid string, ip string, window time.Duration) (bool, error) {
+func (r *RateLimitMiddleware) AllowRequest(
+	ctx context.Context,
+	service_userid string,
+	ip string,
+	window time.Duration,
+) (bool, error) {
+
 	key := fmt.Sprintf("ratelimit:%s:%s", service_userid, ip)
+
 	now := time.Now().UnixMilli()
 	windowStart := now - window.Milliseconds()
 
+	member := fmt.Sprintf("%d:%s", now, uuid.New().String())
+
 	pipe := r.client.TxPipeline()
-	removeCmd := pipe.ZRemRangeByScore(ctx, key, "0", fmt.Sprintf("%d", windowStart))
+
+	pipe.ZRemRangeByScore(ctx, key, "0", fmt.Sprintf("%d", windowStart))
+
+	pipe.ZAdd(ctx, key, redis.Z{
+		Score:  float64(now),
+		Member: member,
+	})
+
 	countCmd := pipe.ZCard(ctx, key)
+
+	pipe.Expire(ctx, key, window)
 
 	if _, err := pipe.Exec(ctx); err != nil {
 		return false, err
 	}
 
-	if removeCmd.Err() != nil {
-		return false, removeCmd.Err()
-	}
-	if countCmd.Err() != nil {
-		return false, countCmd.Err()
-	}
-
 	count := countCmd.Val()
-	if count >= 10 {
+
+	if count > 10 {
+		// rollback request
+		r.client.ZRem(ctx, key, member)
 		return false, nil
-	}
-
-	member := fmt.Sprintf("%d:%d", now, time.Now().UnixNano())
-	if err := r.client.ZAdd(ctx, key, redis.Z{
-		Score:  float64(now),
-		Member: member,
-	}).Err(); err != nil {
-		return false, err
-	}
-
-	if err := r.client.Expire(ctx, key, window).Err(); err != nil {
-		return false, err
 	}
 
 	return true, nil
 }
-
 func NewRateLimitMiddleware(limiter *redis.Client) *RateLimitMiddleware {
 	return &RateLimitMiddleware{
 		client: limiter,
