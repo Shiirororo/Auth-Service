@@ -1,15 +1,15 @@
-package health_check
+package health_router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/internal/health"
+	"github.com/user_service/internal/health/controller/http"
 )
 
 type HealthRouter struct {
-	HealthHandler *health.HealthHandler
+	HealthHandler *http.HealthHandler
 }
 
-func NewHealthRouter(healthHandler *health.HealthHandler) *HealthRouter {
+func NewHealthRouter(healthHandler *http.HealthHandler) *HealthRouter {
 	return &HealthRouter{HealthHandler: healthHandler}
 }
 

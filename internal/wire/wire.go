@@ -6,18 +6,19 @@ package wire
 import (
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
-	"github.com/user_service/internal/auth"
+	"github.com/user_service/internal/auth/application/service"
+	auth_router "github.com/user_service/internal/auth/controller"
+	auth_http "github.com/user_service/internal/auth/controller/http"
 	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
-	"github.com/user_service/internal/health"
+	health_router "github.com/user_service/internal/health/controller"
+	health_http "github.com/user_service/internal/health/controller/http"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
 	"github.com/user_service/internal/router"
-	"github.com/user_service/internal/router/auth_router"
-	"github.com/user_service/internal/router/health_check"
 	"gorm.io/gorm"
 )
 
@@ -40,13 +41,13 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		messaging.NewMockEmailSender,
 		initialize.InitJWT,
 		commons.NewRedisBlacklist,
-		auth.NewAuthService,
-		auth.NewAuthHandler,
+		service.NewAuthService,
+		auth_http.NewAuthHandler,
 		middleware.NewAuthMiddleware,
 		middleware.NewRateLimitMiddleware,
 		auth_router.NewAuthRouter,
-		health.NewHealthHandler,
-		health_check.NewHealthRouter,
+		health_http.NewHealthHandler,
+		health_router.NewHealthRouter,
 		router.NewRouter,
 	)
 	return new(router.Router), nil

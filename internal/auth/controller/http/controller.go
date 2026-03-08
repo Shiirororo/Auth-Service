@@ -1,25 +1,26 @@
-package auth
+package http
 
 import (
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/pkg/request"
+	"github.com/user_service/internal/auth/application/service"
+	"github.com/user_service/internal/auth/controller/dto"
 	"github.com/user_service/pkg/token"
 )
 
 type AuthHandler struct {
-	authService AuthServiceInterface
+	authService service.AuthServiceInterface
 }
 
-func NewAuthHandler(authService AuthServiceInterface) *AuthHandler {
+func NewAuthHandler(authService service.AuthServiceInterface) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
 func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
-	var req = request.LoginRequest{}
+	var req = dto.LoginRequestWithEmail{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		//TODO: Hide server status
@@ -27,7 +28,7 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.authService.LoginService(c.Request.Context(), req.Username, req.Password)
+	accessToken, refreshToken, err := h.authService.LoginServiceWithEmail(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -66,7 +67,7 @@ func (h *AuthHandler) LogoutHandler(c *gin.Context) {
 }
 
 func (h *AuthHandler) RefreshHandler(c *gin.Context) {
-	var req = request.RefreshRequest{}
+	var req = dto.RefreshRequest{}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -86,7 +87,7 @@ func (h *AuthHandler) RefreshHandler(c *gin.Context) {
 }
 
 func (h *AuthHandler) RegisterHandler(c *gin.Context) {
-	var req = request.RegisterRequest{}
+	var req = dto.RegisterRequest{}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return

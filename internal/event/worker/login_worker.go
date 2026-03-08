@@ -8,14 +8,14 @@ import (
 )
 
 type LoginWorker struct {
-	authRepo repository.UserRepository
+	authRepo repository.AuthRepository
 	queue    chan string
 	workers  int
 }
 
 // NewLoginWorker creates a worker pool that handles login events.
 // It subscribes to the dispatcher so it can receive events.
-func NewLoginWorker(authRepo repository.UserRepository, dispatcher *event.Dispatcher, workers int) *LoginWorker {
+func NewLoginWorker(authRepo repository.AuthRepository, dispatcher *event.Dispatcher, workers int) *LoginWorker {
 	worker := &LoginWorker{
 		authRepo: authRepo,
 		queue:    make(chan string, 1000), // Buffer to handle login spikes Without Blocking

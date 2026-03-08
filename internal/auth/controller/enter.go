@@ -2,17 +2,17 @@ package auth_router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/internal/auth"
+	"github.com/user_service/internal/auth/controller/http"
 	"github.com/user_service/internal/middleware"
 )
 
 type AuthRouter struct {
-	authHandler    *auth.AuthHandler
+	authHandler    *http.AuthHandler
 	authMiddleware *middleware.AuthMiddleware
 	rateLimit      *middleware.RateLimitMiddleware
 }
 
-func NewAuthRouter(authHandler *auth.AuthHandler, authMiddleware *middleware.AuthMiddleware, ratelimitMiddleware *middleware.RateLimitMiddleware) *AuthRouter {
+func NewAuthRouter(authHandler *http.AuthHandler, authMiddleware *middleware.AuthMiddleware, ratelimitMiddleware *middleware.RateLimitMiddleware) *AuthRouter {
 	return &AuthRouter{
 		authHandler:    authHandler,
 		authMiddleware: authMiddleware,

@@ -8,18 +8,19 @@ package wire
 
 import (
 	"github.com/redis/go-redis/v9"
-	"github.com/user_service/internal/auth"
+	"github.com/user_service/internal/auth/application/service"
+	auth_router "github.com/user_service/internal/auth/controller"
+	"github.com/user_service/internal/auth/controller/http"
 	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
-	"github.com/user_service/internal/health"
+	health_router "github.com/user_service/internal/health/controller"
+	http2 "github.com/user_service/internal/health/controller/http"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
 	"github.com/user_service/internal/router"
-	"github.com/user_service/internal/router/auth_router"
-	"github.com/user_service/internal/router/health_check"
 	"gorm.io/gorm"
 )
 
@@ -33,13 +34,13 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 	tokenMaker := initialize.InitJWT()
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
-	authServiceInterface := auth.NewAuthService(userRepository, otpRepository, emailSender, tokenBlacklist, tokenMaker, dispatcher)
-	authHandler := auth.NewAuthHandler(authServiceInterface)
+	authServiceInterface := service.NewAuthService(userRepository, otpRepository, emailSender, tokenBlacklist, tokenMaker, dispatcher)
+	authHandler := http.NewAuthHandler(authServiceInterface)
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)
 	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
-	healthHandler := health.NewHealthHandler()
-	healthRouter := health_check.NewHealthRouter(healthHandler)
+	healthHandler := http2.NewHealthHandler()
+	healthRouter := health_router.NewHealthRouter(healthHandler)
 	int2 := provideWorkerCount()
 	loginWorker := worker.NewLoginWorker(userRepository, dispatcher, int2)
 	routerRouter := router.NewRouter(authRouter, healthRouter, dispatcher, loginWorker)

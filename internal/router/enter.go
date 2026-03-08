@@ -1,22 +1,22 @@
 package router
 
 import (
+	auth_router "github.com/user_service/internal/auth/controller"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
-	"github.com/user_service/internal/router/auth_router"
-	"github.com/user_service/internal/router/health_check"
+	health_router "github.com/user_service/internal/health/controller"
 )
 
 type Router struct {
 	Auth        *auth_router.AuthRouter
-	Health      *health_check.HealthRouter
+	Health      *health_router.HealthRouter
 	Dispatcher  *event.Dispatcher
 	LoginWorker *worker.LoginWorker
 }
 
 func NewRouter(
 	Auth *auth_router.AuthRouter,
-	Health *health_check.HealthRouter,
+	Health *health_router.HealthRouter,
 	Dispatcher *event.Dispatcher,
 	LoginWorker *worker.LoginWorker,
 ) *Router {

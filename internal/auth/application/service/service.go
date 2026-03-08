@@ -1,4 +1,4 @@
-package auth
+package service
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/user_service/internal/auth/domain/entity"
+	"github.com/user_service/internal/auth/domain/model/entity"
 	"github.com/user_service/internal/auth/domain/repository"
 	"github.com/user_service/internal/auth/domain/sender"
 	"github.com/user_service/internal/auth/domain/vo"
@@ -19,7 +19,7 @@ import (
 )
 
 type AuthService struct {
-	authRepo    repository.UserRepository
+	authRepo    repository.AuthRepository
 	otpRepo     repository.OTPRepository
 	emailSender sender.EmailSender
 	blacklist   commons.TokenBlacklist
@@ -27,7 +27,7 @@ type AuthService struct {
 	dispatcher  *event.Dispatcher
 }
 
-func NewAuthService(authRepo repository.UserRepository, otpRepo repository.OTPRepository, emailSender sender.EmailSender, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
+func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRepository, emailSender sender.EmailSender, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
 	return &AuthService{
 		authRepo:    authRepo,
 		otpRepo:     otpRepo,
@@ -40,7 +40,8 @@ func NewAuthService(authRepo repository.UserRepository, otpRepo repository.OTPRe
 
 type AuthServiceInterface interface {
 	RegisterService(ctx context.Context, username string, password string, email string) error
-	LoginService(ctx context.Context, username string, password string) (string, string, error)
+	LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, error)
+	LoginServiceWithEmail(ctx context.Context, email vo.Email, password string) (string, string, error)
 	LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
 }
@@ -84,23 +85,23 @@ func (s *AuthService) RegisterService(ctx context.Context, username string, pass
 	if err != nil {
 		return err
 	}
-	user := entity.NewUser(id.String(), username, emailVo, hashedPassVo)
+	user := entity.NewAuth(id.String(), emailVo, hashedPassVo)
 
 	// 7. Persist to DB
 	return s.authRepo.CreateNewUser(ctx, user)
 }
-func (s *AuthService) LoginService(ctx context.Context, username string, password string) (string, string, error) {
+func (s *AuthService) LoginServiceWithEmail(ctx context.Context, email vo.Email, password string) (string, string, error) {
 
 	//U DUMB U FORGOT TO REVOKE TOKEN IN THE SAME IP
 
-	user, err := s.authRepo.FindByUsername(ctx, username)
+	user, err := s.authRepo.GetUserByEmail(ctx, vo.Email(email))
 
 	if err != nil {
 		return "", "", errors.New("Invalid credentials, USER NOT FOUND")
 	}
 
 	err = bcrypt.CompareHashAndPassword(
-		[]byte(user.PasswordHash.String()),
+		[]byte(user.PasswordHash),
 		[]byte(password),
 	)
 	if err != nil {
@@ -112,13 +113,13 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 	sessionID := uuid.NewString()
 	g.Go(func() error {
 		var err error
-		accessToken, err = s.jwtService.GenerateAccessToken(user.ID, sessionID)
+		accessToken, err = s.jwtService.GenerateAccessToken(string(user.UserID), sessionID)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		refreshToken, err = s.jwtService.GenerateRefreshToken(user.ID, sessionID)
+		refreshToken, err = s.jwtService.GenerateRefreshToken(string(user.UserID), sessionID)
 		return err
 	})
 
@@ -128,10 +129,13 @@ func (s *AuthService) LoginService(ctx context.Context, username string, passwor
 
 	s.dispatcher.Dispatch(ctx, event.Event{
 		Type:    event.LoginEvent,
-		Payload: user.ID,
+		Payload: user.UserID,
 	})
 
 	return accessToken, refreshToken, nil
+}
+func (s *AuthService) LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, error) {
+	return "", "", errors.New("not implemented")
 }
 
 func (s *AuthService) LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error {
