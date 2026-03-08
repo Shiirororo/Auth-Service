@@ -3,12 +3,12 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/user_service/internal/auth/domain/entity"
 	"github.com/user_service/internal/auth/domain/repository"
+	"github.com/user_service/internal/auth/domain/sender"
 	"github.com/user_service/internal/auth/domain/vo"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
@@ -19,18 +19,22 @@ import (
 )
 
 type AuthService struct {
-	authRepo   repository.UserRepository
-	blacklist  commons.TokenBlacklist
-	jwtService token.TokenMaker
-	dispatcher *event.Dispatcher
+	authRepo    repository.UserRepository
+	otpRepo     repository.OTPRepository
+	emailSender sender.EmailSender
+	blacklist   commons.TokenBlacklist
+	jwtService  token.TokenMaker
+	dispatcher  *event.Dispatcher
 }
 
-func NewAuthService(authRepo repository.UserRepository, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
+func NewAuthService(authRepo repository.UserRepository, otpRepo repository.OTPRepository, emailSender sender.EmailSender, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
 	return &AuthService{
-		authRepo:   authRepo,
-		blacklist:  blacklist,
-		jwtService: jwtService,
-		dispatcher: dispatcher,
+		authRepo:    authRepo,
+		otpRepo:     otpRepo,
+		emailSender: emailSender,
+		blacklist:   blacklist,
+		jwtService:  jwtService,
+		dispatcher:  dispatcher,
 	}
 }
 
@@ -41,7 +45,6 @@ type AuthServiceInterface interface {
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
 }
 
-// Should I add interface here?
 func (s *AuthService) RegisterService(ctx context.Context, username string, password string, email string) error {
 	// 1. Create Domain Value Objects to validate integrity early
 	emailVo, err := vo.NewEmail(email)
@@ -54,11 +57,20 @@ func (s *AuthService) RegisterService(ctx context.Context, username string, pass
 		return err
 	}
 
-	// 2. new OTP
+	// 2. Generate new OTP
 	otp := random.GenerateOPT6Digit()
-	fmt.Printf("OTP: %d\n", otp)
-	// 3. Save OTP in Redis
+
+	// 3. Save OTP in Redis (5 minutes TTL)
+	err = s.otpRepo.SaveOTP(ctx, emailVo, otp, 5*time.Minute)
+	if err != nil {
+		return err
+	}
+
 	// 4. Send OTP to email
+	err = s.emailSender.SendOTPEmail(ctx, emailVo, otp)
+	if err != nil {
+		return err
+	}
 
 	// 5. Hash Password explicitly for persistence
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(passVo.String()), 10)

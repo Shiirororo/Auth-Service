@@ -9,6 +9,7 @@ package wire
 import (
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/internal/auth"
+	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
@@ -26,11 +27,13 @@ import (
 
 func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 	userRepository := persistence.NewUserRepository(db)
+	otpRepository := persistence.NewRedisOTPRepository(rdb)
+	emailSender := messaging.NewMockEmailSender()
 	tokenBlacklist := commons.NewRedisBlacklist(rdb)
 	tokenMaker := initialize.InitJWT()
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
-	authServiceInterface := auth.NewAuthService(userRepository, tokenBlacklist, tokenMaker, dispatcher)
+	authServiceInterface := auth.NewAuthService(userRepository, otpRepository, emailSender, tokenBlacklist, tokenMaker, dispatcher)
 	authHandler := auth.NewAuthHandler(authServiceInterface)
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)

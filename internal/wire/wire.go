@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/internal/auth"
+	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
@@ -35,6 +36,8 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		event.NewDispatcher,
 		worker.NewLoginWorker,
 		persistence.NewUserRepository,
+		persistence.NewRedisOTPRepository,
+		messaging.NewMockEmailSender,
 		initialize.InitJWT,
 		commons.NewRedisBlacklist,
 		auth.NewAuthService,
