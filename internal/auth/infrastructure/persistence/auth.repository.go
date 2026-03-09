@@ -16,7 +16,7 @@ func NewUserRepository(db *gorm.DB) repository.AuthRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) GetUserByUserID(ctx context.Context, userID string) (*entity.Auth, error) {
+func (r *userRepository) GetUserByUserID(ctx context.Context, userID []byte) (*entity.Auth, error) {
 	var model entity.Auth
 	err := r.db.
 		WithContext(ctx).
@@ -49,12 +49,12 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 	return &model, err
 }
 
-func (r *userRepository) UpdateLastLogin(ctx context.Context, userID string) error {
+func (r *userRepository) UpdateLastLogin(ctx context.Context, userID []byte) error {
 	// Only update what is strictly required from DB
 	return r.db.
 		WithContext(ctx).
 		Model(&entity.Auth{}).
-		Where("id = ?", userID).
+		Where("user_id = ?", userID).
 		Update("last_login", gorm.Expr("NOW()")).
 		Error
 }

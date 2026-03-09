@@ -18,26 +18,6 @@ func (a *Auth) TableName() string {
 	return "user_auth"
 }
 
-// func (a *Auth) ToDomain() (A *Auth, err error) {
-// 	passVo := vo.RestorePassword(a.PasswordHash)
-
-// 	return &Auth{
-// 		UserID:       a.UserID,
-// 		PasswordHash: passVo.String(),
-// 		LastLogin:    a.LastLogin,
-// 		LockedUntil:  a.LockedUntil,
-// 	}, nil
-// }
-// func FromDomain(user *Auth) *Auth {
-// 	return &Auth{
-// 		UserID:       user.UserID,
-// 		Email:        user.Email,
-// 		PasswordHash: user.PasswordHash,
-// 		LastLogin:    user.LastLogin,
-// 		LockedUntil:  user.LockedUntil,
-// 	}
-// }
-
 // NewUser creates a new Domain User enforcing all invariants correctly.
 func NewAuth(id []byte, email string, passwordHash vo.Password) *Auth {
 	return &Auth{

@@ -16,6 +16,7 @@ func InitRouter(r *gin.Engine, config settings.Config) {
 	}
 	AuthRouter := router.RouterGroupApp.Auth
 	HealthRouter := router.RouterGroupApp.Health
+	UserRouter := router.RouterGroupApp.User
 	r.Use(middleware.ConcurrencyLimiterHandler(config.Server.Max_Request))
 	api := r.Group("/v1")
 	go middleware.CleanUpClients()
@@ -23,6 +24,7 @@ func InitRouter(r *gin.Engine, config settings.Config) {
 	{
 		AuthRouter.InitAuthRouter(api) //<- MainGroup
 		HealthRouter.InitHealthRouter(api)
+		UserRouter.InitUserRouter(api)
 	}
 }
 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -38,8 +39,8 @@ func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRe
 
 type AuthServiceInterface interface {
 	RegisterService(ctx context.Context, username string, password string, email string) error
-	LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, error)
-	LoginServiceWithEmail(ctx context.Context, email string, password string) (string, string, error)
+	LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, string, error)
+	LoginServiceWithEmail(ctx context.Context, email string, password string) (string, string, string, error)
 	LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
 }
@@ -47,6 +48,12 @@ type AuthServiceInterface interface {
 func (s *AuthService) RegisterService(ctx context.Context, username string, password string, email string) error {
 	// 1. Create Domain Value Objects to validate integrity early
 	// Email domain validation is handled by the presentation layer (gin binding)
+
+	//Check duplicate email and username
+	_, err := s.authRepo.GetUserByEmail(ctx, email)
+	if err == nil {
+		return errors.New("Email already exists")
+	}
 
 	passVo, err := vo.NewPassword(password)
 	if err != nil {
@@ -65,12 +72,12 @@ func (s *AuthService) RegisterService(ctx context.Context, username string, pass
 	})
 	return nil
 }
-func (s *AuthService) LoginServiceWithEmail(ctx context.Context, email string, password string) (string, string, error) {
+func (s *AuthService) LoginServiceWithEmail(ctx context.Context, email string, password string) (string, string, string, error) {
 
 	user, err := s.authRepo.GetUserByEmail(ctx, email)
 
 	if err != nil {
-		return "", "", errors.New("Invalid credentials, USER NOT FOUND")
+		return "", "", "", errors.New("Invalid credentials, USER NOT FOUND")
 	}
 
 	err = bcrypt.CompareHashAndPassword(
@@ -78,37 +85,43 @@ func (s *AuthService) LoginServiceWithEmail(ctx context.Context, email string, p
 		[]byte(password),
 	)
 	if err != nil {
-		return "", "", errors.New("Invalid credentials, PASSWORD NOT MATCH")
+		return "", "", "", errors.New("Invalid credentials, PASSWORD NOT MATCH")
 	}
 	g, ctx := errgroup.WithContext(ctx)
 
 	var accessToken, refreshToken string
 	sessionID := uuid.NewString()
+
+	// Encode UserID to hex string for tokens/client
+	userIDHexStr := "0x" + hex.EncodeToString(user.UserID)
+
 	g.Go(func() error {
 		var err error
-		accessToken, err = s.jwtService.GenerateAccessToken(string(user.UserID), sessionID)
+		accessToken, err = s.jwtService.GenerateAccessToken(userIDHexStr, sessionID)
 		return err
 	})
 
 	g.Go(func() error {
 		var err error
-		refreshToken, err = s.jwtService.GenerateRefreshToken(string(user.UserID), sessionID)
+		refreshToken, err = s.jwtService.GenerateRefreshToken(userIDHexStr, sessionID)
 		return err
 	})
 
 	if err := g.Wait(); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	s.dispatcher.Dispatch(ctx, event.Event{
-		Type:    event.LoginEvent,
-		Payload: user.UserID,
+		Type: event.LoginEvent,
+		Payload: event.LoginPayload{
+			UserID: user.UserID, // Bytes for internal event
+		},
 	})
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, userIDHexStr, nil
 }
-func (s *AuthService) LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, error) {
-	return "", "", errors.New("not implemented")
+func (s *AuthService) LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, string, error) {
+	return "", "", "", errors.New("not implemented")
 }
 
 func (s *AuthService) LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error {

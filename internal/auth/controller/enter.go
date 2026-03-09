@@ -34,7 +34,6 @@ func (ar *AuthRouter) InitAuthRouter(Router *gin.RouterGroup) {
 	private := auth.Group("/")
 	private.Use(ar.authMiddleware.AuthenticateToken())
 	{
-		private.GET("/user_info" /*ar.auth.GetUserInfoHandler*/)
 		private.POST("/logout", ar.authHandler.LogoutHandler)
 	}
 }

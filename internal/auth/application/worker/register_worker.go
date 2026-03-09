@@ -95,8 +95,8 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 
 	// 6. User Role (default user role: ID=1)
 	userRole := &common_entity.UserRole{
-		User_role: id,
-		Role_ID:   1, // Default user role
+		UserID: id,
+		RoleID: 1, // Default user role
 	}
 	if err := w.roleRepo.AssignRoleToUser(ctx, userRole); err != nil {
 		log.Println("Failed to assign role:", err)

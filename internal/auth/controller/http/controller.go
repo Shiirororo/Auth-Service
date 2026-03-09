@@ -24,17 +24,18 @@ func (h *AuthHandler) LoginHandler(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		//TODO: Hide server status
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
 		return
 	}
 
-	accessToken, refreshToken, err := h.authService.LoginServiceWithEmail(c.Request.Context(), req.Email, req.Password)
+	accessToken, refreshToken, userID, err := h.authService.LoginServiceWithEmail(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"user_id":       userID,
 		"refresh_token": refreshToken,
 		"message":       "login success",
 		"access_token":  accessToken,

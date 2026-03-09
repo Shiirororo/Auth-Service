@@ -9,6 +9,7 @@ package wire
 import (
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/internal/auth/application/service"
+	"github.com/user_service/internal/auth/application/worker"
 	"github.com/user_service/internal/auth/controller"
 	"github.com/user_service/internal/auth/controller/http"
 	"github.com/user_service/internal/auth/infrastructure/messaging"
@@ -16,12 +17,14 @@ import (
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/commons/infrastructure/persistence"
 	"github.com/user_service/internal/event"
-	"github.com/user_service/internal/event/worker"
 	"github.com/user_service/internal/health/controller"
 	http2 "github.com/user_service/internal/health/controller/http"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
 	"github.com/user_service/internal/router"
+	service2 "github.com/user_service/internal/user/application/service"
+	"github.com/user_service/internal/user/controller"
+	"github.com/user_service/internal/user/controller/http"
 	persistence2 "github.com/user_service/internal/user/infrastrucutre/persistence"
 	"gorm.io/gorm"
 )
@@ -43,13 +46,16 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
 	healthHandler := http2.NewHealthHandler()
 	healthRouter := health_router.NewHealthRouter(healthHandler)
+	profileRepository := persistence2.NewProfileRepository(db)
+	userServiceInterface := service2.NewUserService(profileRepository)
+	userHandler := user.NewUserHandler(userServiceInterface)
+	userRouter := user_router.NewUserRouter(userHandler, authMiddleware)
 	int2 := provideWorkerCount()
 	loginWorker := worker.NewLoginWorker(authRepository, dispatcher, int2)
 	userRepository := commons_persistence.NewUserRepository(db)
-	profileRepository := persistence2.NewProfileRepository(db)
 	roleRepository := commons_persistence.NewRoleRepository(db)
 	registerWorker := worker.NewRegisterWorker(authRepository, userRepository, profileRepository, roleRepository, dispatcher)
-	routerRouter := router.NewRouter(authRouter, healthRouter, dispatcher, loginWorker, registerWorker)
+	routerRouter := router.NewRouter(authRouter, healthRouter, userRouter, dispatcher, loginWorker, registerWorker)
 	return routerRouter, nil
 }
 

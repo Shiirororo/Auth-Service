@@ -5,8 +5,8 @@ import (
 )
 
 type UserRole struct {
-	User_role uuid.UUID `gorm:"type:binary(16);primaryKey"`
-	Role_ID   int       `gorm:"type:int;primaryKey"`
+	UserID uuid.UUID `gorm:"column:user_id;type:binary(16);primaryKey"`
+	RoleID int       `gorm:"column:role_id;type:int;primaryKey"`
 }
 
 func (u *UserRole) TableName() string {

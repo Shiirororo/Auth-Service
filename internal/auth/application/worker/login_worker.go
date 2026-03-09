@@ -9,7 +9,7 @@ import (
 
 type LoginWorker struct {
 	authRepo repository.AuthRepository
-	queue    chan string
+	queue    chan []byte
 	workers  int
 }
 
@@ -18,7 +18,7 @@ type LoginWorker struct {
 func NewLoginWorker(authRepo repository.AuthRepository, dispatcher *event.Dispatcher, workers int) *LoginWorker {
 	worker := &LoginWorker{
 		authRepo: authRepo,
-		queue:    make(chan string, 1000), // Buffer to handle login spikes Without Blocking
+		queue:    make(chan []byte, 1000), // Buffer to handle login spikes Without Blocking
 		workers:  workers,
 	}
 
@@ -29,8 +29,8 @@ func NewLoginWorker(authRepo repository.AuthRepository, dispatcher *event.Dispat
 
 // Handle implements event.EventHandler. It receives events from the dispatcher and queues them.
 func (w *LoginWorker) Handle(ctx context.Context, e event.Event) error {
-	if userID, ok := e.Payload.(string); ok {
-		w.queue <- userID
+	if payload, ok := e.Payload.(event.LoginPayload); ok {
+		w.queue <- payload.UserID
 	}
 	return nil
 }

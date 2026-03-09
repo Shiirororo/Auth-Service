@@ -12,6 +12,10 @@ type RegisterSuccessPayload struct {
 	Password string
 }
 
+type LoginPayload struct {
+	UserID []byte
+}
+
 const (
 	LoginEvent           EventType = "login"
 	RegisterSuccessEvent EventType = "register"
