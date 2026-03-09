@@ -5,7 +5,6 @@ import (
 
 	"github.com/user_service/internal/auth/domain/model/entity"
 	"github.com/user_service/internal/auth/domain/repository"
-	"github.com/user_service/internal/auth/domain/vo"
 	"gorm.io/gorm"
 )
 
@@ -17,53 +16,37 @@ func NewUserRepository(db *gorm.DB) repository.AuthRepository {
 	return &userRepository{db: db}
 }
 
-// func (r *userRepository) FindByUsername(ctx context.Context, username string) (*entity.Auth, error) {
-// 	var model entity.Auth
-
-// 	err := r.db.
-// 		WithContext(ctx).
-// 		Where("username = ?", username).
-// 		First(&model).Error
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return model.ToDomain()
-// }
-
 func (r *userRepository) GetUserByUserID(ctx context.Context, userID string) (*entity.Auth, error) {
 	var model entity.Auth
 	err := r.db.
 		WithContext(ctx).
-		Where("id = ?", userID).
+		Where("user_id = ?", userID).
 		First(&model).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	return model.ToDomain()
+	return &model, err
 }
 
-func (r *userRepository) CreateNewUser(ctx context.Context, user *entity.Auth) error {
-	model := entity.FromDomain(user)
-	return r.db.WithContext(ctx).Create(model).Error
+func (r *userRepository) CreateAuth(ctx context.Context, user *entity.Auth) error {
+	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepository) GetUserByEmail(ctx context.Context, email vo.Email) (*entity.Auth, error) {
+func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*entity.Auth, error) {
 	var model entity.Auth
 
 	err := r.db.
 		WithContext(ctx).
-		Where("email = ?", email.String()).
+		Where("email = ?", email).
 		First(&model).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	return model.ToDomain()
+	return &model, err
 }
 
 func (r *userRepository) UpdateLastLogin(ctx context.Context, userID string) error {

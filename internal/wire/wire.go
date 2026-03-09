@@ -12,6 +12,7 @@ import (
 	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
+	commons_persistence "github.com/user_service/internal/commons/infrastructure/persistence"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/event/worker"
 	health_router "github.com/user_service/internal/health/controller"
@@ -19,6 +20,7 @@ import (
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
 	"github.com/user_service/internal/router"
+	user_persistence "github.com/user_service/internal/user/infrastrucutre/persistence"
 	"gorm.io/gorm"
 )
 
@@ -36,7 +38,11 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		provideWorkerCount,
 		event.NewDispatcher,
 		worker.NewLoginWorker,
+		worker.NewRegisterWorker,
 		persistence.NewUserRepository,
+		commons_persistence.NewUserRepository,
+		commons_persistence.NewRoleRepository,
+		user_persistence.NewProfileRepository,
 		persistence.NewRedisOTPRepository,
 		messaging.NewMockEmailSender,
 		initialize.InitJWT,

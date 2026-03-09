@@ -6,8 +6,15 @@ type Event struct {
 	Payload any
 }
 
+type RegisterSuccessPayload struct {
+	Username string
+	Email    string
+	Password string
+}
+
 const (
-	LoginEvent EventType = "login"
-	OrderEvent EventType = "order"
-	AuditEvent EventType = "audit"
+	LoginEvent           EventType = "login"
+	RegisterSuccessEvent EventType = "register"
+	OrderEvent           EventType = "order"
+	AuditEvent           EventType = "audit"
 )

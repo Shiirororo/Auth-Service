@@ -8,7 +8,6 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/internal/auth/domain/repository"
-	"github.com/user_service/internal/auth/domain/vo"
 )
 
 type redisOTPRepository struct {
@@ -21,16 +20,16 @@ func NewRedisOTPRepository(client *redis.Client) repository.OTPRepository {
 	}
 }
 
-func (r *redisOTPRepository) getRedisKey(email vo.Email) string {
-	return fmt.Sprintf("otp:%s", email.String())
+func (r *redisOTPRepository) getRedisKey(email string) string {
+	return fmt.Sprintf("otp:%s", email)
 }
 
-func (r *redisOTPRepository) SaveOTP(ctx context.Context, email vo.Email, otp int, ttl time.Duration) error {
+func (r *redisOTPRepository) SaveOTP(ctx context.Context, email string, otp int, ttl time.Duration) error {
 	key := r.getRedisKey(email)
 	return r.client.Set(ctx, key, otp, ttl).Err()
 }
 
-func (r *redisOTPRepository) GetOTP(ctx context.Context, email vo.Email) (int, error) {
+func (r *redisOTPRepository) GetOTP(ctx context.Context, email string) (int, error) {
 	key := r.getRedisKey(email)
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {
@@ -48,7 +47,7 @@ func (r *redisOTPRepository) GetOTP(ctx context.Context, email vo.Email) (int, e
 	return otp, nil
 }
 
-func (r *redisOTPRepository) DeleteOTP(ctx context.Context, email vo.Email) error {
+func (r *redisOTPRepository) DeleteOTP(ctx context.Context, email string) error {
 	key := r.getRedisKey(email)
 	return r.client.Del(ctx, key).Err()
 }

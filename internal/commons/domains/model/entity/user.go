@@ -10,7 +10,7 @@ type User struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }
 
-func (a *Auth) UserTableName() string {
+func (u *User) TableName() string {
 	return "users"
 }
 

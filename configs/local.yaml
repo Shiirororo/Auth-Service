@@ -10,7 +10,7 @@ grafana:
 databases:
   host: 127.0.0.1
   port: 33007
-  dbname: auth_db
+  dbname: USER_VER_2
   username: auth_user
   password: auth_password
   maxIdleConns: 200

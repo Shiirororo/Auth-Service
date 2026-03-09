@@ -8,10 +8,11 @@ import (
 )
 
 type Router struct {
-	Auth        *auth_router.AuthRouter
-	Health      *health_router.HealthRouter
-	Dispatcher  *event.Dispatcher
-	LoginWorker *worker.LoginWorker
+	Auth           *auth_router.AuthRouter
+	Health         *health_router.HealthRouter
+	Dispatcher     *event.Dispatcher
+	LoginWorker    *worker.LoginWorker
+	RegisterWorker *worker.RegisterWorker
 }
 
 func NewRouter(
@@ -19,12 +20,14 @@ func NewRouter(
 	Health *health_router.HealthRouter,
 	Dispatcher *event.Dispatcher,
 	LoginWorker *worker.LoginWorker,
+	RegisterWorker *worker.RegisterWorker,
 ) *Router {
 	return &Router{
-		Auth:        Auth,
-		Health:      Health,
-		Dispatcher:  Dispatcher,
-		LoginWorker: LoginWorker,
+		Auth:           Auth,
+		Health:         Health,
+		Dispatcher:     Dispatcher,
+		LoginWorker:    LoginWorker,
+		RegisterWorker: RegisterWorker,
 	}
 }
 

@@ -14,35 +14,35 @@ type Auth struct {
 	LockedUntil  *time.Time `gorm:"column:locked_until"`
 }
 
-func (a *Auth) AuthTableName() string {
+func (a *Auth) TableName() string {
 	return "user_auth"
 }
 
-func (a *Auth) ToDomain() (A *Auth, err error) {
-	passVo := vo.RestorePassword(a.PasswordHash)
+// func (a *Auth) ToDomain() (A *Auth, err error) {
+// 	passVo := vo.RestorePassword(a.PasswordHash)
 
-	return &Auth{
-		UserID:       a.UserID,
-		PasswordHash: passVo.String(),
-		LastLogin:    a.LastLogin,
-		LockedUntil:  a.LockedUntil,
-	}, nil
-}
-func FromDomain(user *Auth) *Auth {
-	return &Auth{
-		UserID:       user.UserID,
-		Email:        user.Email,
-		PasswordHash: user.PasswordHash,
-		LastLogin:    user.LastLogin,
-		LockedUntil:  user.LockedUntil,
-	}
-}
+// 	return &Auth{
+// 		UserID:       a.UserID,
+// 		PasswordHash: passVo.String(),
+// 		LastLogin:    a.LastLogin,
+// 		LockedUntil:  a.LockedUntil,
+// 	}, nil
+// }
+// func FromDomain(user *Auth) *Auth {
+// 	return &Auth{
+// 		UserID:       user.UserID,
+// 		Email:        user.Email,
+// 		PasswordHash: user.PasswordHash,
+// 		LastLogin:    user.LastLogin,
+// 		LockedUntil:  user.LockedUntil,
+// 	}
+// }
 
 // NewUser creates a new Domain User enforcing all invariants correctly.
-func NewAuth(id string, email vo.Email, passwordHash vo.Password) *Auth {
+func NewAuth(id []byte, email string, passwordHash vo.Password) *Auth {
 	return &Auth{
-		UserID:       []byte(id),
-		Email:        email.String(),
+		UserID:       id,
+		Email:        email,
 		PasswordHash: passwordHash.String(),
 	}
 }

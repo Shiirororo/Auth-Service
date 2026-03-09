@@ -1,7 +1,5 @@
 package dto
 
-import "github.com/user_service/internal/auth/domain/vo"
-
 type RegisterRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -13,8 +11,8 @@ type LoginRequestWithUsername struct {
 	Password string `json:"password" binding:"required"`
 }
 type LoginRequestWithEmail struct {
-	Email    vo.Email `json:"email" binding:"required"`
-	Password string   `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
 type UserLoginResponse struct {
