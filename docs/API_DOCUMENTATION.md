@@ -18,6 +18,7 @@ Authenticates a user and returns a session-bound token pair.
 - **Response**:
   ```json
   {
+    "user_id": "0x019CD...",
     "access_token": "eyJhbGci...",
     "refresh_token": "eyJhbGci...",
     "message": "login success"
@@ -78,6 +79,37 @@ Demonstrates session-based authentication enforcement.
       "session_id": "...",
       "type": "access",
       "exp": "..."
-    }
+  }
+  ```
+
+---
+
+## 5. Get User Profile
+Fetches the user profile for the specified user ID.
+
+### Testing on Postman:
+1. First, **Login** or **Register** to get a valid `access_token` and `user_id`.
+2. Create a new request in Postman with the following details:
+   - **Method**: `POST`
+   - **URL**: `http://localhost:8080/v1/user/profile` (adjust port if necessary)
+3. Go to the **Headers** tab and add:
+   - `Authorization`: `Bearer <your_access_token>`
+4. Go to the **Body** tab, select **raw** and format as **JSON**, then provide:
+  ```json
+  {
+    "access_token": "<your_access_token>",
+    "userID": "<your_user_id>"
+  }
+  ```
+5. Send the request to receive the populated user profile.
+
+- **Response Details**:
+  ```json
+  {
+    "user_id": "...",
+    "profile_name": "...",
+    "mobile": "...",
+    "gender": 1,
+    "birthday": "..."
   }
   ```

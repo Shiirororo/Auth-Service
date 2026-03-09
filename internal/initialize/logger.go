@@ -1,11 +1,11 @@
 package initialize
 
 import (
-	"github.com/user_service/global"
 	"github.com/user_service/pkg/logger"
+	"github.com/user_service/pkg/settings"
 )
 
-func InitLogger() {
+func InitLogger(config settings.Config) *logger.LoggerZap {
 	// Initialize logger here
-	global.Logger = logger.NewLogger(global.Config.Logger)
+	return logger.NewLogger(config.Logger)
 }
