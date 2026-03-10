@@ -14,4 +14,8 @@ Detailed endpoint instructions can be found in [API_DOCUMENTATION.md](API_DOCUME
 - **Layered Design**: Adheres to SOLID principles for maintainability.
 
 
+Update:
+FROM THIS 3/10 commit foward, Authentication part will be seperated into a different repository.
+
+
 wow
