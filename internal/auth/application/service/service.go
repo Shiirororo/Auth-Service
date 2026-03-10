@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/user_service/internal/auth/domain/repository"
-	"github.com/user_service/internal/auth/domain/sender"
 	"github.com/user_service/internal/auth/domain/vo"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
@@ -18,22 +17,20 @@ import (
 )
 
 type AuthService struct {
-	authRepo    repository.AuthRepository
-	otpRepo     repository.OTPRepository
-	emailSender sender.EmailSender
-	blacklist   commons.TokenBlacklist
-	jwtService  token.TokenMaker
-	dispatcher  *event.Dispatcher
+	authRepo   repository.AuthRepository
+	otpRepo    repository.OTPRepository
+	blacklist  commons.TokenBlacklist
+	jwtService token.TokenMaker
+	dispatcher *event.Dispatcher
 }
 
-func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRepository, emailSender sender.EmailSender, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
+func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRepository, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
 	return &AuthService{
-		authRepo:    authRepo,
-		otpRepo:     otpRepo,
-		emailSender: emailSender,
-		blacklist:   blacklist,
-		jwtService:  jwtService,
-		dispatcher:  dispatcher,
+		authRepo:   authRepo,
+		otpRepo:    otpRepo,
+		blacklist:  blacklist,
+		jwtService: jwtService,
+		dispatcher: dispatcher,
 	}
 }
 

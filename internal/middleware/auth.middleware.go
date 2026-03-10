@@ -52,3 +52,9 @@ func (m *AuthMiddleware) AuthenticateToken() gin.HandlerFunc { //Verify Signatur
 		c.Next()
 	}
 }
+
+func (m *AuthMiddleware) AuthorizationUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//TODO: Authorization Middlware
+	}
+}

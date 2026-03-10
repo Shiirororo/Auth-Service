@@ -1,5 +1,5 @@
 # Auth Service (Go)
-
+<DEPRECATED>
 Authentication and user information service following a layered architecture.
 
 ## Architecture Flow

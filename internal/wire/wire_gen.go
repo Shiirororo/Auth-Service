@@ -12,7 +12,6 @@ import (
 	"github.com/user_service/internal/auth/application/worker"
 	"github.com/user_service/internal/auth/controller"
 	"github.com/user_service/internal/auth/controller/http"
-	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/commons/infrastructure/persistence"
@@ -34,12 +33,11 @@ import (
 func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 	authRepository := persistence.NewUserRepository(db)
 	otpRepository := persistence.NewRedisOTPRepository(rdb)
-	emailSender := messaging.NewMockEmailSender()
 	tokenBlacklist := commons.NewRedisBlacklist(rdb)
 	tokenMaker := initialize.InitJWT()
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
-	authServiceInterface := service.NewAuthService(authRepository, otpRepository, emailSender, tokenBlacklist, tokenMaker, dispatcher)
+	authServiceInterface := service.NewAuthService(authRepository, otpRepository, tokenBlacklist, tokenMaker, dispatcher)
 	authHandler := http.NewAuthHandler(authServiceInterface)
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)

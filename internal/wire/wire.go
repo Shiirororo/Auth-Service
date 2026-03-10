@@ -10,7 +10,6 @@ import (
 	"github.com/user_service/internal/auth/application/worker"
 	auth_router "github.com/user_service/internal/auth/controller"
 	auth_http "github.com/user_service/internal/auth/controller/http"
-	"github.com/user_service/internal/auth/infrastructure/messaging"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/commons"
 	commons_persistence "github.com/user_service/internal/commons/infrastructure/persistence"
@@ -47,7 +46,6 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		commons_persistence.NewRoleRepository,
 		user_persistence.NewProfileRepository,
 		persistence.NewRedisOTPRepository,
-		messaging.NewMockEmailSender,
 		initialize.InitJWT,
 		commons.NewRedisBlacklist,
 		service.NewAuthService,

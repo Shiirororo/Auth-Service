@@ -56,7 +56,7 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 		return err
 	}
 
-	// 2. Generate UUID
+	// 2. Generate UUID			--> V7
 	id, err := uuid.NewV7()
 	if err != nil {
 		return err
