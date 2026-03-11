@@ -9,6 +9,5 @@ import (
 type ProfileRepository interface {
 	GetUserInfor(ctx context.Context, userID []byte) (*entity.UserProfile, error)
 	CreateProfile(ctx context.Context, profile *entity.UserProfile) error
-	UpdateProfileName(ctx context.Context, userID []byte) error
-	UpdateUserMobile(ctx context.Context, userID []byte) error
+	UpdateUser(ctx context.Context, userID []byte, data map[string]interface{}) error
 }

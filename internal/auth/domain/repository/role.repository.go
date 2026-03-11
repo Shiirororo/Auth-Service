@@ -1,9 +1,9 @@
-package commons_repository
+package repository
 
 import (
 	"context"
 
-	"github.com/user_service/internal/commons/domains/model/entity"
+	"github.com/user_service/internal/auth/domain/model/entity"
 )
 
 type RoleRepository interface {

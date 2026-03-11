@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+type RegisterRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+}
+
 type GetUserRequest struct {
 	// AccessToken string `json:"access_token" binding:"required"`
 	UserID string `json:"userID" binding:"required"`

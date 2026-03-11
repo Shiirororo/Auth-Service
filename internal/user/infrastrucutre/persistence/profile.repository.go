@@ -26,13 +26,14 @@ func (pr *profileRepository) GetUserInfor(ctx context.Context, userID []byte) (*
 }
 
 func (pr *profileRepository) CreateProfile(ctx context.Context, profile *entity.UserProfile) error {
-	return pr.db.WithContext(ctx).Create(profile).Error
+	return pr.db.WithContext(ctx).
+		Create(profile).Error
 }
 
-func (pr *profileRepository) UpdateProfileName(ctx context.Context, userID []byte) error {
-	return nil
-}
+func (pr *profileRepository) UpdateUser(ctx context.Context, userID []byte, data map[string]interface{}) error {
 
-func (pr *profileRepository) UpdateUserMobile(ctx context.Context, userID []byte) error {
-	return nil
+	return pr.db.WithContext(ctx).
+		Model(&entity.UserProfile{}).
+		Where("user_id = ?", userID).
+		Updates(data).Error
 }

@@ -1,10 +1,10 @@
-package commons_persistence
+package persistence
 
 import (
 	"context"
 
-	"github.com/user_service/internal/commons/domains/model/entity"
-	commons_repository "github.com/user_service/internal/commons/domains/repository"
+	"github.com/user_service/internal/auth/domain/model/entity"
+	"github.com/user_service/internal/auth/domain/repository"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +12,7 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) commons_repository.UserRepository {
+func NewUserRepository(db *gorm.DB) repository.UserRepository {
 	return &UserRepository{db: db}
 }
 

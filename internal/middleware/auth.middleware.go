@@ -2,19 +2,21 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/internal/commons"
+	auth_service "github.com/user_service/internal/auth/application/service"
 	"github.com/user_service/pkg/token"
 )
 
 type AuthMiddleware struct {
 	authService token.TokenMaker
-	tokenRepo   commons.TokenBlacklist
+	tokenRepo   auth_service.TokenBlacklist
+	authz       auth_service.AuthorizationServiceInterface
 }
 
-func NewAuthMiddleware(authService token.TokenMaker, tokenRepo commons.TokenBlacklist) *AuthMiddleware {
+func NewAuthMiddleware(authService token.TokenMaker, tokenRepo auth_service.TokenBlacklist, authz auth_service.AuthorizationServiceInterface) *AuthMiddleware {
 	return &AuthMiddleware{
 		authService: authService,
 		tokenRepo:   tokenRepo,
+		authz:       authz,
 	}
 }
 
@@ -53,8 +55,27 @@ func (m *AuthMiddleware) AuthenticateToken() gin.HandlerFunc { //Verify Signatur
 	}
 }
 
-func (m *AuthMiddleware) AuthorizationUser() gin.HandlerFunc {
+func (m *AuthMiddleware) AuthorizationUser(requiredRoleID uint) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//TODO: Authorization Middlware
+		val, exists := c.Get("claims")
+		if !exists {
+			abortUnauthorized(c, "missing claims")
+			return
+		}
+		claims, ok := val.(*token.Claims)
+		if !ok || claims == nil {
+			abortUnauthorized(c, "invalid claims")
+			return
+		}
+
+		userIDBytes := []byte(claims.UserID) // Normally parsed back to bytes
+		
+		hasRole, err := m.authz.CheckUserRole(c.Request.Context(), userIDBytes, requiredRoleID)
+		if err != nil || !hasRole {
+			abortUnauthorized(c, "insufficient permissions")
+			return
+		}
+
+		c.Next()
 	}
 }

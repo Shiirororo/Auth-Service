@@ -13,8 +13,6 @@ import (
 	"github.com/user_service/internal/auth/controller"
 	"github.com/user_service/internal/auth/controller/http"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
-	"github.com/user_service/internal/commons"
-	"github.com/user_service/internal/commons/infrastructure/persistence"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/health/controller"
 	http2 "github.com/user_service/internal/health/controller/http"
@@ -22,6 +20,7 @@ import (
 	"github.com/user_service/internal/middleware"
 	"github.com/user_service/internal/router"
 	service2 "github.com/user_service/internal/user/application/service"
+	worker2 "github.com/user_service/internal/user/application/worker"
 	"github.com/user_service/internal/user/controller"
 	"github.com/user_service/internal/user/controller/http"
 	persistence2 "github.com/user_service/internal/user/infrastrucutre/persistence"
@@ -31,28 +30,29 @@ import (
 // Injectors from wire.go:
 
 func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
-	authRepository := persistence.NewUserRepository(db)
+	authRepository := persistence.NewAuthRepository(db)
 	otpRepository := persistence.NewRedisOTPRepository(rdb)
-	tokenBlacklist := commons.NewRedisBlacklist(rdb)
+	tokenBlacklist := service.NewRedisBlacklist(rdb)
 	tokenMaker := initialize.InitJWT()
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
 	authServiceInterface := service.NewAuthService(authRepository, otpRepository, tokenBlacklist, tokenMaker, dispatcher)
 	authHandler := http.NewAuthHandler(authServiceInterface)
-	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist)
+	roleRepository := persistence.NewRoleRepository(db)
+	authorizationServiceInterface := service.NewAuthorizationService(roleRepository)
+	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist, authorizationServiceInterface)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)
 	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
 	healthHandler := http2.NewHealthHandler()
 	healthRouter := health_router.NewHealthRouter(healthHandler)
 	profileRepository := persistence2.NewProfileRepository(db)
-	userServiceInterface := service2.NewUserService(profileRepository)
+	userServiceInterface := service2.NewUserService(profileRepository, authRepository, dispatcher)
 	userHandler := user.NewUserHandler(userServiceInterface)
-	userRouter := user_router.NewUserRouter(userHandler, authMiddleware)
+	userRouter := user_router.NewUserRouter(userHandler, authMiddleware, rateLimitMiddleware)
 	int2 := provideWorkerCount()
 	loginWorker := worker.NewLoginWorker(authRepository, dispatcher, int2)
-	userRepository := commons_persistence.NewUserRepository(db)
-	roleRepository := commons_persistence.NewRoleRepository(db)
-	registerWorker := worker.NewRegisterWorker(authRepository, userRepository, profileRepository, roleRepository, dispatcher)
+	userRepository := persistence.NewUserRepository(db)
+	registerWorker := worker2.NewRegisterWorker(authRepository, userRepository, profileRepository, roleRepository, dispatcher)
 	routerRouter := router.NewRouter(authRouter, healthRouter, userRouter, dispatcher, loginWorker, registerWorker)
 	return routerRouter, nil
 }

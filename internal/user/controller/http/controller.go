@@ -32,3 +32,20 @@ func (uh *UserHandler) GetUserInfoHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, profile)
 }
+
+func (uh *UserHandler) RegisterHandler(c *gin.Context) {
+	var req = dto.RegisterRequest{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+	err := uh.userService.RegisterService(c.Request.Context(), req.Username, req.Password, req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Registration successful",
+	})
+}

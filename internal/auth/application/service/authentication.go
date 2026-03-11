@@ -8,8 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/user_service/internal/auth/domain/repository"
-	"github.com/user_service/internal/auth/domain/vo"
-	"github.com/user_service/internal/commons"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/pkg/token"
 	"golang.org/x/crypto/bcrypt"
@@ -19,12 +17,12 @@ import (
 type AuthService struct {
 	authRepo   repository.AuthRepository
 	otpRepo    repository.OTPRepository
-	blacklist  commons.TokenBlacklist
+	blacklist  TokenBlacklist
 	jwtService token.TokenMaker
 	dispatcher *event.Dispatcher
 }
 
-func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRepository, blacklist commons.TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
+func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRepository, blacklist TokenBlacklist, jwtService token.TokenMaker, dispatcher *event.Dispatcher) AuthServiceInterface {
 	return &AuthService{
 		authRepo:   authRepo,
 		otpRepo:    otpRepo,
@@ -35,40 +33,14 @@ func NewAuthService(authRepo repository.AuthRepository, otpRepo repository.OTPRe
 }
 
 type AuthServiceInterface interface {
-	RegisterService(ctx context.Context, username string, password string, email string) error
+
 	LoginServiceWithUsername(ctx context.Context, username string, password string) (string, string, string, error)
 	LoginServiceWithEmail(ctx context.Context, email string, password string) (string, string, string, error)
 	LogoutService(ctx context.Context, sessionID string, ttl time.Duration) error
 	RefreshService(ctx context.Context, refreshToken string) (string, string, error)
 }
 
-func (s *AuthService) RegisterService(ctx context.Context, username string, password string, email string) error {
-	// 1. Create Domain Value Objects to validate integrity early
-	// Email domain validation is handled by the presentation layer (gin binding)
 
-	//Check duplicate email and username
-	_, err := s.authRepo.GetUserByEmail(ctx, email)
-	if err == nil {
-		return errors.New("Email already exists")
-	}
-
-	passVo, err := vo.NewPassword(password)
-	if err != nil {
-		return err
-	}
-
-	// ASSUME OTP AND VERIFICATION COMPLETED HERE
-
-	s.dispatcher.Dispatch(ctx, event.Event{
-		Type: event.RegisterSuccessEvent,
-		Payload: event.RegisterSuccessPayload{
-			Username: username,
-			Email:    email,
-			Password: passVo.String(),
-		},
-	})
-	return nil
-}
 func (s *AuthService) LoginServiceWithEmail(ctx context.Context, email string, password string) (string, string, string, error) {
 
 	user, err := s.authRepo.GetUserByEmail(ctx, email)

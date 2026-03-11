@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/user_service/internal/auth/application/worker"
+	auth_worker "github.com/user_service/internal/auth/application/worker"
 	auth_router "github.com/user_service/internal/auth/controller"
 	"github.com/user_service/internal/event"
 	health_router "github.com/user_service/internal/health/controller"
+	user_worker "github.com/user_service/internal/user/application/worker"
 	user_router "github.com/user_service/internal/user/controller"
 )
 
@@ -13,8 +14,8 @@ type Router struct {
 	Health         *health_router.HealthRouter
 	User           *user_router.UserRouter
 	Dispatcher     *event.Dispatcher
-	LoginWorker    *worker.LoginWorker
-	RegisterWorker *worker.RegisterWorker
+	LoginWorker    *auth_worker.LoginWorker
+	RegisterWorker *user_worker.RegisterWorker
 }
 
 func NewRouter(
@@ -22,8 +23,8 @@ func NewRouter(
 	Health *health_router.HealthRouter,
 	User *user_router.UserRouter,
 	Dispatcher *event.Dispatcher,
-	LoginWorker *worker.LoginWorker,
-	RegisterWorker *worker.RegisterWorker,
+	LoginWorker *auth_worker.LoginWorker,
+	RegisterWorker *user_worker.RegisterWorker,
 ) *Router {
 	return &Router{
 		Auth:           Auth,
