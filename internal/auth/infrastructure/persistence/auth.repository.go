@@ -8,15 +8,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type userRepository struct {
+type authRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) repository.AuthRepository {
-	return &userRepository{db: db}
+func NewAuthRepository(db *gorm.DB) repository.AuthRepository {
+	return &authRepository{db: db}
 }
 
-func (r *userRepository) GetUserByUserID(ctx context.Context, userID []byte) (*entity.Auth, error) {
+func (r *authRepository) GetUserByUserID(ctx context.Context, userID []byte) (*entity.Auth, error) {
 	var model entity.Auth
 	err := r.db.
 		WithContext(ctx).
@@ -30,11 +30,11 @@ func (r *userRepository) GetUserByUserID(ctx context.Context, userID []byte) (*e
 	return &model, err
 }
 
-func (r *userRepository) CreateAuth(ctx context.Context, user *entity.Auth) error {
+func (r *authRepository) CreateAuth(ctx context.Context, user *entity.Auth) error {
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*entity.Auth, error) {
+func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (*entity.Auth, error) {
 	var model entity.Auth
 
 	err := r.db.
@@ -49,7 +49,7 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 	return &model, err
 }
 
-func (r *userRepository) UpdateLastLogin(ctx context.Context, userID []byte) error {
+func (r *authRepository) UpdateLastLogin(ctx context.Context, userID []byte) error {
 	// Only update what is strictly required from DB
 	return r.db.
 		WithContext(ctx).

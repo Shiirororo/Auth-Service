@@ -9,19 +9,29 @@ import (
 type UserRouter struct {
 	userHandler    *user_http.UserHandler
 	authMiddleware *middleware.AuthMiddleware
+	rateLimit      *middleware.RateLimitMiddleware
 }
 
-func NewUserRouter(userHandler *user_http.UserHandler, authMiddleware *middleware.AuthMiddleware) *UserRouter {
+func NewUserRouter(userHandler *user_http.UserHandler, authMiddleware *middleware.AuthMiddleware, ratelimitMiddleware *middleware.RateLimitMiddleware) *UserRouter {
 	return &UserRouter{
 		userHandler:    userHandler,
 		authMiddleware: authMiddleware,
+		rateLimit:      ratelimitMiddleware,
 	}
 }
 
 func (ur *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	usr := Router.Group("/user")
-	usr.Use(ur.authMiddleware.AuthenticateToken())
+	
+	// public routes
 	{
-		usr.POST("/profile", ur.userHandler.GetUserInfoHandler)
+		usr.POST("/register", ur.rateLimit.UserLoginLimiter(), ur.userHandler.RegisterHandler)
+	}
+
+	// private routes
+	privateUsr := usr.Group("/")
+	privateUsr.Use(ur.authMiddleware.AuthenticateToken())
+	{
+		privateUsr.POST("/profile", ur.userHandler.GetUserInfoHandler)
 	}
 }

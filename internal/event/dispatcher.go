@@ -33,7 +33,10 @@ func (d *Dispatcher) Register(eventType EventType, handler EventHandler) {
 func (d *Dispatcher) Start(ctx context.Context) {
 	for {
 		select {
-		case event := <-d.eventQueue:
+		case event, ok := <-d.eventQueue:
+			if !ok {
+				return
+			}
 			d.Dispatch(ctx, event)
 		case <-ctx.Done():
 			return
@@ -44,6 +47,9 @@ func (d *Dispatcher) Start(ctx context.Context) {
 func (d *Dispatcher) Dispatch(ctx context.Context, event Event) {
 	d.mu.RLock()
 	handlers, exists := d.handlers[event.Type]
+	if exists {
+		handlers = append([]EventHandler(nil), handlers...)
+	}
 	d.mu.RUnlock()
 
 	if !exists {

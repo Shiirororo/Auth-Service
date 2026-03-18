@@ -20,7 +20,6 @@ func InitRouter(r *gin.Engine, config settings.Config) {
 	r.Use(middleware.ConcurrencyLimiterHandler(config.Server.Max_Request))
 	api := r.Group("/v1")
 	go middleware.CleanUpClients()
-	// api.Use(middleware.ConcurenncyLimiterHandler())
 	{
 		AuthRouter.InitAuthRouter(api) //<- MainGroup
 		HealthRouter.InitHealthRouter(api)

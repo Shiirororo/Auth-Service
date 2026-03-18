@@ -5,11 +5,9 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/user_service/internal/auth/domain/model/entity"
+	auth_entity "github.com/user_service/internal/auth/domain/model/entity"
 	auth_repository "github.com/user_service/internal/auth/domain/repository"
 	"github.com/user_service/internal/auth/domain/vo"
-	common_entity "github.com/user_service/internal/commons/domains/model/entity"
-	common_repository "github.com/user_service/internal/commons/domains/repository"
 	"github.com/user_service/internal/event"
 	user_entity "github.com/user_service/internal/user/domain/model/entity"
 	user_repository "github.com/user_service/internal/user/domain/repository"
@@ -17,19 +15,17 @@ import (
 )
 
 type RegisterWorker struct {
-	queue       chan string
-	workers     int
 	authRepo    auth_repository.AuthRepository
-	userRepo    common_repository.UserRepository
+	userRepo    auth_repository.UserRepository
 	profileRepo user_repository.ProfileRepository
-	roleRepo    common_repository.RoleRepository
+	roleRepo    auth_repository.RoleRepository
 }
 
 func NewRegisterWorker(
 	authRepo auth_repository.AuthRepository,
-	userRepo common_repository.UserRepository,
+	userRepo auth_repository.UserRepository,
 	profileRepo user_repository.ProfileRepository,
-	roleRepo common_repository.RoleRepository,
+	roleRepo auth_repository.RoleRepository,
 	dispatcher *event.Dispatcher,
 ) *RegisterWorker {
 	worker := &RegisterWorker{
@@ -56,7 +52,7 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 		return err
 	}
 
-	// 2. Generate UUID
+	// 2. Generate UUID			--> V7
 	id, err := uuid.NewV7()
 	if err != nil {
 		return err
@@ -65,10 +61,10 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 	idBytes := id[:]
 
 	// 3. User Entity
-	user := &common_entity.User{
+	user := &auth_entity.User{
 		ID:       idBytes,
 		Username: payload.Username,
-		State:    common_entity.UserActive,
+		State:    auth_entity.UserActive,
 	}
 	if err := w.userRepo.CreateNewUser(ctx, user); err != nil {
 		log.Println("Failed to create user:", err)
@@ -77,7 +73,7 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 
 	// 4. User Auth
 	passVo := vo.RestorePassword(string(hashPass))
-	auth := entity.NewAuth(idBytes, payload.Email, passVo)
+	auth := auth_entity.NewAuth(idBytes, payload.Email, passVo)
 	if err := w.authRepo.CreateAuth(ctx, auth); err != nil {
 		log.Println("Failed to create auth:", err)
 		return err
@@ -94,7 +90,7 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 	}
 
 	// 6. User Role (default user role: ID=1)
-	userRole := &common_entity.UserRole{
+	userRole := &auth_entity.UserRole{
 		UserID: id,
 		RoleID: 1, // Default user role
 	}
