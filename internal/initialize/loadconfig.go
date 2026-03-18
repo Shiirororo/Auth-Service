@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/spf13/viper"
-	"github.com/user_service/global"
+	"github.com/user_service/pkg/settings"
 )
 
-func LoadConfig() {
+func LoadConfig() settings.Config {
 	viper := viper.New()
 	viper.AddConfigPath("./configs")
 	viper.AddConfigPath("../configs")
@@ -21,7 +21,9 @@ func LoadConfig() {
 		panic(fmt.Errorf("Failed to read the configuration %w \n", err))
 	}
 	fmt.Println("Server Port:: ", viper.GetInt("server.port"))
-	if err := viper.Unmarshal(&global.Config); err != nil {
+	var config settings.Config
+	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Printf("Unable to decode configuration %v", err)
 	}
+	return config
 }

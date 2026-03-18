@@ -6,16 +6,24 @@ package wire
 import (
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
+	"github.com/user_service/internal/auth/application/service"
+	"github.com/user_service/internal/auth/application/worker"
+	auth_router "github.com/user_service/internal/auth/controller"
+	auth_http "github.com/user_service/internal/auth/controller/http"
+	"github.com/user_service/internal/auth/infrastructure/messaging"
+	"github.com/user_service/internal/auth/infrastructure/persistence"
+	"github.com/user_service/internal/commons"
+	commons_persistence "github.com/user_service/internal/commons/infrastructure/persistence"
 	"github.com/user_service/internal/event"
-	"github.com/user_service/internal/event/worker"
-	"github.com/user_service/internal/handler"
+	health_router "github.com/user_service/internal/health/controller"
+	health_http "github.com/user_service/internal/health/controller/http"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
-	"github.com/user_service/internal/repository"
 	"github.com/user_service/internal/router"
-	"github.com/user_service/internal/router/auth_router"
-	"github.com/user_service/internal/router/health_check"
-	"github.com/user_service/internal/service"
+	user_service "github.com/user_service/internal/user/application/service"
+	user_router "github.com/user_service/internal/user/controller"
+	user_http "github.com/user_service/internal/user/controller/http"
+	user_persistence "github.com/user_service/internal/user/infrastrucutre/persistence"
 	"gorm.io/gorm"
 )
 
@@ -33,16 +41,25 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		provideWorkerCount,
 		event.NewDispatcher,
 		worker.NewLoginWorker,
-		repository.NewAuthRepository,
+		worker.NewRegisterWorker,
+		persistence.NewUserRepository,
+		commons_persistence.NewUserRepository,
+		commons_persistence.NewRoleRepository,
+		user_persistence.NewProfileRepository,
+		persistence.NewRedisOTPRepository,
+		messaging.NewMockEmailSender,
 		initialize.InitJWT,
-		service.NewRedisBlacklist,
+		commons.NewRedisBlacklist,
 		service.NewAuthService,
-		handler.NewAuthHandler,
+		auth_http.NewAuthHandler,
 		middleware.NewAuthMiddleware,
 		middleware.NewRateLimitMiddleware,
 		auth_router.NewAuthRouter,
-		handler.NewHealthHandler,
-		health_check.NewHealthRouter,
+		health_http.NewHealthHandler,
+		health_router.NewHealthRouter,
+		user_service.NewUserService,
+		user_http.NewUserHandler,
+		user_router.NewUserRouter,
 		router.NewRouter,
 	)
 	return new(router.Router), nil

@@ -4,3 +4,7 @@ configs/production.yaml
 pkg /logger
 
 cmd/console
+
+*.log
+
+*.txt

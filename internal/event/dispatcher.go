@@ -50,10 +50,13 @@ func (d *Dispatcher) Dispatch(ctx context.Context, event Event) {
 		return
 	}
 
+	// Detach context cancellation since this is an async background operation
+	detachedCtx := context.WithoutCancel(ctx)
+
 	// Fan out the event to all registered handlers for this event type
 	for _, handler := range handlers {
 		// We execute the handler in a new goroutine to avoid blocking the dispatcher loop.
 		// The EventHandler implementation itself should handle its own worker pooling if needed.
-		go handler.Handle(ctx, event)
+		go handler.Handle(detachedCtx, event)
 	}
 }

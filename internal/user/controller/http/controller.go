@@ -1,0 +1,34 @@
+package user
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/user_service/internal/user/application/service"
+	"github.com/user_service/internal/user/controller/dto"
+)
+
+type UserHandler struct {
+	userService service.UserServiceInterface
+}
+
+func NewUserHandler(userService service.UserServiceInterface) *UserHandler {
+	return &UserHandler{userService: userService}
+}
+
+func (uh *UserHandler) GetUserInfoHandler(c *gin.Context) {
+	var req = dto.GetUserRequest{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	profile, err := uh.userService.GetUserInfo(c.Request.Context(), req.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, profile)
+}
