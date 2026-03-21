@@ -4,15 +4,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/user_service/internal/user/application/service"
+	user_service "github.com/user_service/internal/user/application/service"
 	"github.com/user_service/internal/user/controller/dto"
 )
 
 type UserHandler struct {
-	userService service.UserServiceInterface
+	userService user_service.UserServiceInterface
 }
 
-func NewUserHandler(userService service.UserServiceInterface) *UserHandler {
+func NewUserHandler(userService user_service.UserServiceInterface) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 

@@ -16,6 +16,13 @@ require (
 	gorm.io/gorm v1.31.1
 )
 
+require (
+	github.com/sendgrid/rest v2.6.9+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.16.1+incompatible // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
+	gorm.io/datatypes v1.2.7 // indirect
+)
+
 require golang.org/x/time v0.14.0 // direct
 
 require (
