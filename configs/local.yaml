@@ -23,7 +23,7 @@ security:
 
 redis:
   host: 127.0.0.1
-  port: 6379
+  port: 63709
   Password:
   database: 0
 

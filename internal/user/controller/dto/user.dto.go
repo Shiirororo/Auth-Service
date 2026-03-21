@@ -22,3 +22,13 @@ type UserProfileResponse struct {
 	Gender      *uint8     `json:"gender,omitempty"`
 	Birthday    *time.Time `json:"birthday,omitempty"`
 }
+
+type UserUpdateRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+	Data   struct {
+		ProfileName string     `json:"profile_name"`
+		Mobile      *string    `json:"mobile,omitempty"`
+		Gender      *uint8     `json:"gender,omitempty"`
+		Birthday    *time.Time `json:"birthday,omitempty"`
+	}
+}

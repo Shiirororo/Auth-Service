@@ -10,13 +10,14 @@ import (
 	"github.com/user_service/internal/auth/domain/vo"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/user/controller/dto"
+	"github.com/user_service/internal/user/domain/model/entity"
 	"github.com/user_service/internal/user/domain/repository"
 )
 
 type UserServiceInterface interface {
 	RegisterService(ctx context.Context, username string, password string, email string) error
 	GetUserInfo(ctx context.Context, userID string) (*dto.UserProfileResponse, error)
-	UpdateUserInfo(ctx context.Context, userID string, data map[string]interface{}) error
+	UpdateUserInfo(ctx context.Context, userID string, data dto.UserUpdateRequest) error
 }
 
 type UserService struct {
@@ -89,7 +90,7 @@ func (s *UserService) GetUserInfo(ctx context.Context, userID string) (*dto.User
 	}, nil
 }
 
-func (s *UserService) UpdateUserInfo(ctx context.Context, userID string, data map[string]interface{}) error {
+func (s *UserService) UpdateUserInfo(ctx context.Context, userID string, data dto.UserUpdateRequest) error {
 	cleanID := strings.TrimPrefix(userID, "0x")
 	cleanID = strings.TrimPrefix(cleanID, "0X")
 
@@ -100,8 +101,13 @@ func (s *UserService) UpdateUserInfo(ctx context.Context, userID string, data ma
 	if len(idBytes) != 16 {
 		return errors.New("invalid user ID length")
 	}
-
-	e := s.profileRepo.UpdateUser(ctx, idBytes, data)
+	updateData := entity.UserUpdateEntity{
+		ProfileName: data.Data.ProfileName,
+		Mobile:      data.Data.Mobile,
+		Gender:      data.Data.Gender,
+		Birthday:    data.Data.Birthday,
+	}
+	e := s.profileRepo.UpdateUser(ctx, idBytes, updateData)
 	if e != nil {
 		return errors.New("Fatal, cannot update")
 	}

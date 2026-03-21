@@ -22,7 +22,7 @@ func NewUserRouter(userHandler *user_http.UserHandler, authMiddleware *middlewar
 
 func (ur *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	usr := Router.Group("/user")
-	
+
 	// public routes
 	{
 		usr.POST("/register", ur.rateLimit.UserLoginLimiter(), ur.userHandler.RegisterHandler)
@@ -33,5 +33,6 @@ func (ur *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	privateUsr.Use(ur.authMiddleware.AuthenticateToken())
 	{
 		privateUsr.POST("/profile", ur.userHandler.GetUserInfoHandler)
+		privateUsr.POST("/profile/update", ur.userHandler.UpdateUserInfoHandler)
 	}
 }

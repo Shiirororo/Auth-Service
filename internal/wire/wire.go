@@ -33,7 +33,7 @@ func provideWorkerCount() int {
 	return 5
 }
 
-func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
+func InitApp(db *gorm.DB, rdb *redis.Client) (*router.App, error) {
 	wire.Build(
 		provideEventQueue,
 		provideWorkerCount,
@@ -59,6 +59,7 @@ func InitRouter(db *gorm.DB, rdb *redis.Client) (*router.Router, error) {
 		user_http.NewUserHandler,
 		user_router.NewUserRouter,
 		router.NewRouter,
+		router.NewApp,
 	)
-	return new(router.Router), nil
+	return new(router.App), nil
 }

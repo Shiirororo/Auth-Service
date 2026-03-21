@@ -15,17 +15,17 @@ func main() {
 	//go console.Console()
 	db, rdb, config, _ := initialize.Run()
 
-	routerApp, err := wire.InitRouter(db, rdb)
+	app, err := wire.InitApp(db, rdb)
 	if err != nil {
-		fmt.Printf("Failed to initialize router: %v\n", err)
+		fmt.Printf("Failed to initialize app: %v\n", err)
 		return
 	}
 
-	router.RouterGroupApp = routerApp
+	router.RouterGroupApp = app.Router
 
 	ctx := context.Background()
-	go routerApp.Dispatcher.Start(ctx)
-	go routerApp.LoginWorker.Start(ctx)
+	go app.Dispatcher.Start(ctx)
+	go app.LoginWorker.Start(ctx)
 
 	r := gin.New()
 	initialize.InitRouter(r, config)

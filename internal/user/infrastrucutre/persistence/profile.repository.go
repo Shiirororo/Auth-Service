@@ -30,7 +30,7 @@ func (pr *profileRepository) CreateProfile(ctx context.Context, profile *entity.
 		Create(profile).Error
 }
 
-func (pr *profileRepository) UpdateUser(ctx context.Context, userID []byte, data map[string]interface{}) error {
+func (pr *profileRepository) UpdateUser(ctx context.Context, userID []byte, data entity.UserUpdateEntity) error {
 
 	return pr.db.WithContext(ctx).
 		Model(&entity.UserProfile{}).
