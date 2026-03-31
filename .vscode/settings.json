@@ -3,5 +3,6 @@
         "buildFlags": [
             "-tags=wireinject"
         ]
-    }
+    },
+    "makefile.configureOnOpen": false
 }

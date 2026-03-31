@@ -4,13 +4,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/google/uuid"
 	auth_entity "github.com/user_service/internal/auth/domain/model/entity"
 	auth_repository "github.com/user_service/internal/auth/domain/repository"
 	"github.com/user_service/internal/auth/domain/vo"
 	"github.com/user_service/internal/event"
 	user_entity "github.com/user_service/internal/user/domain/model/entity"
 	user_repository "github.com/user_service/internal/user/domain/repository"
+	"github.com/user_service/pkg/idgen"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,13 +52,8 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 		return err
 	}
 
-	// 2. Generate UUID			--> V7
-	id, err := uuid.NewV7()
-	if err != nil {
-		return err
-	}
-
-	idBytes := id[:]
+	// 2. Generate snowflake ID
+	idBytes := idgen.NewID()
 
 	// 3. User Entity
 	user := &auth_entity.User{
@@ -91,8 +86,8 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 
 	// 6. User Role (default user role: ID=1)
 	userRole := &auth_entity.UserRole{
-		UserID: id,
-		RoleID: 1, // Default user role
+		UserID: idBytes,
+		RoleID: 2,
 	}
 	if err := w.roleRepo.AssignRoleToUser(ctx, userRole); err != nil {
 		log.Println("Failed to assign role:", err)
@@ -100,6 +95,5 @@ func (w *RegisterWorker) Handle(ctx context.Context, e event.Event) error {
 	}
 
 	log.Println("Register worker completed successfully for user:", payload.Username)
-
 	return nil
 }

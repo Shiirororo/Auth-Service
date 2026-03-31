@@ -1,14 +1,15 @@
-# Auth Service API Documentation
+# API Documentation
 
 All endpoints are prefixed with `/v1`.
 
-## 1. Login
-Authenticates a user and returns a session-bound token pair.
+---
 
-- **URL**: `/v1/auth/login`
-- **Method**: `POST`
-- **Auth required**: NO
-- **Request Body**:
+## Auth
+
+### 1. Login
+- **POST** `/v1/auth/login`
+- **Auth**: No
+- **Request**:
   ```json
   {
     "username": "your_username",
@@ -27,33 +28,25 @@ Authenticates a user and returns a session-bound token pair.
 
 ---
 
-## 2. Logout
-Revokes the current session. Any token (AT or RT) belonging to this session will no longer be valid.
-
-- **URL**: `/v1/auth/logout`
-- **Method**: `POST`
-- **Auth required**: YES (Bearer Access Token)
-- **Request Body**: Empty or `{}`
+### 2. Logout
+- **POST** `/v1/auth/logout`
+- **Auth**: Yes (Bearer Access Token)
+- **Request**: `{}`
 - **Response**:
   ```json
-  {
-    "message": "Logout success"
-  }
+  { "message": "Logout success" }
   ```
 
 ---
 
-## 3. Refresh Token
-Exchanges an old Refresh Token for a new pair. Implements **JTI Rotation** (old RT is blacklisted).
+### 3. Refresh Token
+Implements JTI rotation — old refresh token is blacklisted on use.
 
-- **URL**: `/v1/auth/refresh-token`
-- **Method**: `POST`
-- **Auth required**: NO (Tokens are passed in body)
-- **Request Body**:
+- **POST** `/v1/auth/refresh-token`
+- **Auth**: No
+- **Request**:
   ```json
-  {
-    "refresh_token": "eyJhbGci..."
-  }
+  { "refresh_token": "eyJhbGci..." }
   ```
 - **Response**:
   ```json
@@ -65,12 +58,9 @@ Exchanges an old Refresh Token for a new pair. Implements **JTI Rotation** (old 
 
 ---
 
-## 4. Get Info (Example Protected Route)
-Demonstrates session-based authentication enforcement.
-
-- **URL**: `/v1/auth/get_info`
-- **Method**: `GET`
-- **Auth required**: YES (Bearer Access Token)
+### 4. Get Info
+- **GET** `/v1/auth/get_info`
+- **Auth**: Yes (Bearer Access Token)
 - **Response**:
   ```json
   {
@@ -79,37 +69,71 @@ Demonstrates session-based authentication enforcement.
       "session_id": "...",
       "type": "access",
       "exp": "..."
+    }
   }
   ```
 
 ---
 
-## 5. Get User Profile
-Fetches the user profile for the specified user ID.
+## User
 
-### Testing on Postman:
-1. First, **Login** or **Register** to get a valid `access_token` and `user_id`.
-2. Create a new request in Postman with the following details:
-   - **Method**: `POST`
-   - **URL**: `http://localhost:8080/v1/user/profile` (adjust port if necessary)
-3. Go to the **Headers** tab and add:
-   - `Authorization`: `Bearer <your_access_token>`
-4. Go to the **Body** tab, select **raw** and format as **JSON**, then provide:
+### 5. Register
+- **POST** `/v1/user/register`
+- **Auth**: No
+- **Rate Limited**: Yes
+- **Request**:
   ```json
   {
-    "access_token": "<your_access_token>",
-    "userID": "<your_user_id>"
+    "username": "your_username",
+    "password": "your_password",
+    "email": "your_email"
   }
   ```
-5. Send the request to receive the populated user profile.
+- **Response**:
+  ```json
+  { "message": "Registration successful" }
+  ```
 
-- **Response Details**:
+---
+
+### 6. Get User Profile
+- **POST** `/v1/user/profile`
+- **Auth**: Yes (Bearer Access Token)
+- **Request**:
+  ```json
+  { "userID": "0x019CD..." }
+  ```
+- **Response**:
   ```json
   {
-    "user_id": "...",
-    "profile_name": "...",
-    "mobile": "...",
+    "user_id": "0x019CD...",
+    "profile_name": "John Doe",
+    "mobile": "08123456789",
     "gender": 1,
-    "birthday": "..."
+    "birthday": "1990-06-15"
   }
+  ```
+
+---
+
+### 7. Update User Profile
+- **POST** `/v1/user/profile/update`
+- **Auth**: Yes (Bearer Access Token)
+- **Request**:
+  ```json
+  {
+    "user_id": "0x019CD...",
+    "data": {
+      "profile_name": "John Doe",
+      "mobile": "08123456789",
+      "gender": 1,
+      "birthday": "1990-06-15"
+    }
+  }
+  ```
+  > All fields inside `data` are optional. Only provided fields will be updated.
+  > `birthday` must be in `YYYY-MM-DD` format.
+- **Response**:
+  ```json
+  { "message": "Update successful" }
   ```

@@ -16,6 +16,7 @@ import (
 	health_http "github.com/user_service/internal/health/controller/http"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
+	product_router "github.com/user_service/internal/product/controller"
 	"github.com/user_service/internal/router"
 	user_service "github.com/user_service/internal/user/application/service"
 	user_worker "github.com/user_service/internal/user/application/worker"
@@ -39,6 +40,8 @@ func InitApp(db *gorm.DB, rdb *redis.Client) (*router.App, error) {
 		provideWorkerCount,
 		event.NewDispatcher,
 		auth_worker.NewLoginWorker,
+		auth_worker.NewEmailCheckWorker,
+		auth_worker.NewUsernameCheckWorker,
 		user_worker.NewRegisterWorker,
 		persistence.NewAuthRepository,
 		persistence.NewUserRepository,
@@ -58,6 +61,7 @@ func InitApp(db *gorm.DB, rdb *redis.Client) (*router.App, error) {
 		user_service.NewUserService,
 		user_http.NewUserHandler,
 		user_router.NewUserRouter,
+		product_router.NewProductRouter,
 		router.NewRouter,
 		router.NewApp,
 	)

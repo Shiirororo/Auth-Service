@@ -8,4 +8,5 @@ import (
 
 type UserRepository interface {
 	CreateNewUser(ctx context.Context, user *entity.User) error
+	GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
 }

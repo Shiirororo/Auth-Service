@@ -1,2 +1,0 @@
-wire: C:\Users\Admin\go\src\github.com\user_service\internal\wire\wire.go:49:3: undefined: health_router
-wire: generate failed

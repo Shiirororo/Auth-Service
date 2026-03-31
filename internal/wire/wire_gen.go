@@ -10,19 +10,20 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/user_service/internal/auth/application/service"
 	"github.com/user_service/internal/auth/application/worker"
-	auth_router "github.com/user_service/internal/auth/controller"
-	auth_http "github.com/user_service/internal/auth/controller/http"
+	"github.com/user_service/internal/auth/controller"
+	"github.com/user_service/internal/auth/controller/http"
 	"github.com/user_service/internal/auth/infrastructure/persistence"
 	"github.com/user_service/internal/event"
-	health_router "github.com/user_service/internal/health/controller"
-	health_http "github.com/user_service/internal/health/controller/http"
+	"github.com/user_service/internal/health/controller"
+	http2 "github.com/user_service/internal/health/controller/http"
 	"github.com/user_service/internal/initialize"
 	"github.com/user_service/internal/middleware"
+	"github.com/user_service/internal/product/controller"
 	"github.com/user_service/internal/router"
-	service2 "github.com/user_service/internal/user/application/service"
+	"github.com/user_service/internal/user/application/service"
 	worker2 "github.com/user_service/internal/user/application/worker"
-	user_router "github.com/user_service/internal/user/controller"
-	user_http "github.com/user_service/internal/user/controller/http"
+	"github.com/user_service/internal/user/controller"
+	"github.com/user_service/internal/user/controller/http"
 	persistence2 "github.com/user_service/internal/user/infrastrucutre/persistence"
 	"gorm.io/gorm"
 )
@@ -37,24 +38,27 @@ func InitApp(db *gorm.DB, rdb *redis.Client) (*router.App, error) {
 	v := provideEventQueue()
 	dispatcher := event.NewDispatcher(v)
 	authServiceInterface := service.NewAuthService(authRepository, otpRepository, tokenBlacklist, tokenMaker, dispatcher)
-	authHandler := auth_http.NewAuthHandler(authServiceInterface)
+	authHandler := http.NewAuthHandler(authServiceInterface)
 	roleRepository := persistence.NewRoleRepository(db)
 	authorizationServiceInterface := service.NewAuthorizationService(roleRepository)
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, tokenBlacklist, authorizationServiceInterface)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(rdb)
-	authRouterInst := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
-	healthHandler := health_http.NewHealthHandler()
-	healthRouterInst := health_router.NewHealthRouter(healthHandler)
+	authRouter := auth_router.NewAuthRouter(authHandler, authMiddleware, rateLimitMiddleware)
+	healthHandler := http2.NewHealthHandler()
+	healthRouter := health_router.NewHealthRouter(healthHandler)
 	profileRepository := persistence2.NewProfileRepository(db)
-	userServiceInterface := service2.NewUserService(profileRepository, authRepository, dispatcher)
-	userHandler := user_http.NewUserHandler(userServiceInterface)
-	userRouterInst := user_router.NewUserRouter(userHandler, authMiddleware, rateLimitMiddleware)
-	routerRouter := router.NewRouter(authRouterInst, healthRouterInst, userRouterInst)
+	userServiceInterface := user_service.NewUserService(profileRepository, dispatcher)
+	userHandler := user.NewUserHandler(userServiceInterface)
+	userRouter := user_router.NewUserRouter(userHandler, authMiddleware, rateLimitMiddleware)
+	productRouter := product_router.NewProductRouter()
+	routerRouter := router.NewRouter(authRouter, healthRouter, userRouter, productRouter)
 	int2 := provideWorkerCount()
 	loginWorker := worker.NewLoginWorker(authRepository, dispatcher, int2)
 	userRepository := persistence.NewUserRepository(db)
 	registerWorker := worker2.NewRegisterWorker(authRepository, userRepository, profileRepository, roleRepository, dispatcher)
-	app := router.NewApp(routerRouter, dispatcher, loginWorker, registerWorker)
+	emailCheckWorker := worker.NewEmailCheckWorker(authRepository, dispatcher)
+	usernameCheckWorker := worker.NewUsernameCheckWorker(userRepository, dispatcher)
+	app := router.NewApp(routerRouter, dispatcher, loginWorker, registerWorker, emailCheckWorker, usernameCheckWorker)
 	return app, nil
 }
 

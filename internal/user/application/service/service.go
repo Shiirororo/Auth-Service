@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strings"
 
-	auth_repository "github.com/user_service/internal/auth/domain/repository"
 	"github.com/user_service/internal/auth/domain/vo"
 	"github.com/user_service/internal/event"
 	"github.com/user_service/internal/user/controller/dto"
@@ -22,34 +21,48 @@ type UserServiceInterface interface {
 
 type UserService struct {
 	profileRepo repository.ProfileRepository
-	authRepo    auth_repository.AuthRepository
 	dispatcher  *event.Dispatcher
 }
 
-func NewUserService(profileRepo repository.ProfileRepository, authRepo auth_repository.AuthRepository, dispatcher *event.Dispatcher) UserServiceInterface {
+func NewUserService(profileRepo repository.ProfileRepository, dispatcher *event.Dispatcher) UserServiceInterface {
 	return &UserService{
 		profileRepo: profileRepo,
-		authRepo:    authRepo,
 		dispatcher:  dispatcher,
 	}
 }
 
 func (s *UserService) RegisterService(ctx context.Context, username string, password string, email string) error {
-	// 1. Create Domain Value Objects to validate integrity early
-	// Email domain validation is handled by the presentation layer (gin binding)
+	emailCh := make(chan bool, 1)
+	usernameCh := make(chan bool, 1)
 
-	//Check duplicate email and username
-	_, err := s.authRepo.GetUserByEmail(ctx, email)
-	if err == nil {
-		return errors.New("Email already exists")
+	s.dispatcher.Dispatch(ctx, event.Event{
+		Type:    event.CheckEmailEvent,
+		Payload: event.CheckEmailPayload{Email: email, ReplyCh: emailCh},
+	})
+	s.dispatcher.Dispatch(ctx, event.Event{
+		Type:    event.CheckUsernameEvent,
+		Payload: event.CheckUsernamePayload{Username: username, ReplyCh: usernameCh},
+	})
+
+	for i := 0; i < 2; i++ {
+		select {
+		case exists := <-emailCh:
+			if exists {
+				return errors.New("email already exists")
+			}
+		case exists := <-usernameCh:
+			if exists {
+				return errors.New("username already exists")
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
 
 	passVo, err := vo.NewPassword(password)
 	if err != nil {
 		return err
 	}
-
-	// ASSUME OTP AND VERIFICATION COMPLETED HERE
 
 	s.dispatcher.Dispatch(ctx, event.Event{
 		Type: event.RegisterSuccessEvent,
@@ -63,7 +76,6 @@ func (s *UserService) RegisterService(ctx context.Context, username string, pass
 }
 
 func (s *UserService) GetUserInfo(ctx context.Context, userID string) (*dto.UserProfileResponse, error) {
-	// Clean up hex string prefix if present (e.g., "0x019CD...")
 	cleanID := strings.TrimPrefix(userID, "0x")
 	cleanID = strings.TrimPrefix(cleanID, "0X")
 
@@ -107,9 +119,8 @@ func (s *UserService) UpdateUserInfo(ctx context.Context, userID string, data dt
 		Gender:      data.Data.Gender,
 		Birthday:    data.Data.Birthday,
 	}
-	e := s.profileRepo.UpdateUser(ctx, idBytes, updateData)
-	if e != nil {
-		return errors.New("Fatal, cannot update")
+	if e := s.profileRepo.UpdateUser(ctx, idBytes, updateData); e != nil {
+		return errors.New("fatal, cannot update")
 	}
 	return nil
 }

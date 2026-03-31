@@ -1,22 +1,21 @@
-package order_router
+package product_router
 
 import (
 	"github.com/gin-gonic/gin"
 )
 
-type OrderRouter struct {
+type ProductRouter struct {
 }
 
-func (or *OrderRouter) InitOrderRouter(Router *gin.RouterGroup) {
+func NewProductRouter() *ProductRouter {
+	return &ProductRouter{}
+}
+
+func (or *ProductRouter) InitOrderRouter(Router *gin.RouterGroup) {
 	//public
-	order := Router.Group("/order")
+	product := Router.Group("/order")
 	{
-		order.GET("/get-product")
+		product.GET("/get-product")
 	}
 
-	//private router
-	private := order.Group("/")
-	{
-		private.POST("/payment")
-	}
 }

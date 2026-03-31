@@ -5,11 +5,11 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: auth_db
+      MYSQL_DATABASE: USER_VER_2
       MYSQL_USER: auth_user
       MYSQL_PASSWORD: auth_password
     ports:
-      - "33007:3306"
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -19,7 +19,7 @@ services:
     container_name: auth_redis
     restart: always
     ports:
-      - "63709:63709"
+      - "6379:6379"
     volumes:
       - redis_data:/data
 

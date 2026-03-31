@@ -7,12 +7,13 @@ import (
 )
 
 // App aggregates the HTTP Router with background services (Dispatcher, Workers).
-// This keeps the pure HTTP routing concern of Router separate from event-driven workers.
 type App struct {
-	Router         *Router
-	Dispatcher     *event.Dispatcher
-	LoginWorker    *auth_worker.LoginWorker
-	RegisterWorker *user_worker.RegisterWorker
+	Router              *Router
+	Dispatcher          *event.Dispatcher
+	LoginWorker         *auth_worker.LoginWorker
+	RegisterWorker      *user_worker.RegisterWorker
+	EmailCheckWorker    *auth_worker.EmailCheckWorker
+	UsernameCheckWorker *auth_worker.UsernameCheckWorker
 }
 
 func NewApp(
@@ -20,11 +21,15 @@ func NewApp(
 	dispatcher *event.Dispatcher,
 	loginWorker *auth_worker.LoginWorker,
 	registerWorker *user_worker.RegisterWorker,
+	emailCheckWorker *auth_worker.EmailCheckWorker,
+	usernameCheckWorker *auth_worker.UsernameCheckWorker,
 ) *App {
 	return &App{
-		Router:         r,
-		Dispatcher:     dispatcher,
-		LoginWorker:    loginWorker,
-		RegisterWorker: registerWorker,
+		Router:              r,
+		Dispatcher:          dispatcher,
+		LoginWorker:         loginWorker,
+		RegisterWorker:      registerWorker,
+		EmailCheckWorker:    emailCheckWorker,
+		UsernameCheckWorker: usernameCheckWorker,
 	}
 }

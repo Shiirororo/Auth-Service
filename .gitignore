@@ -2,7 +2,7 @@
 configs/production.yaml
 /test
 pkg /logger
-
+/.kiro
 cmd/console
 
 *.log

@@ -17,10 +17,14 @@ func NewUserRepository(db *gorm.DB) repository.UserRepository {
 }
 
 func (r *UserRepository) CreateNewUser(ctx context.Context, user *entity.User) error {
-	var model entity.User = *user
-	err := r.db.WithContext(ctx).Create(&model).Error
+	return r.db.WithContext(ctx).Create(user).Error
+}
+
+func (r *UserRepository) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
+	var model entity.User
+	err := r.db.WithContext(ctx).Where("username = ?", username).First(&model).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &model, nil
 }
