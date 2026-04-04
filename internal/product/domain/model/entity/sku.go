@@ -4,22 +4,44 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"gorm.io/datatypes"
 )
 
+type SKUStatus int8
+
 type SKU struct {
-	ID         int64           `gorm:"column:id;primaryKey;autoIncrement"`
-	SKUNo      string          `gorm:"column:skuNo;type:varchar(32);uniqueIndex:uk_sku_no;default:'';comment:sku no"`
-	SKUName    *string         `gorm:"column:skuName;type:varchar(50);comment:sku name"`
-	SKUDesc    *string         `gorm:"column:skuDesc;type:varchar(256);comment:sku desc"`
-	SKUType    *int8           `gorm:"column:skuType;type:tinyint;comment:sku type"`
-	Status     int8            `gorm:"column:status;type:tinyint;not null;comment:status"`
-	Sort       int             `gorm:"column:sort;default:0;comment:priority sort"`
-	SKUStock   int             `gorm:"column:skuStock;not null;default:0;comment:sku stock"`
-	SKUPrice   decimal.Decimal `gorm:"column:skuPrice;type:decimal(10,2);not null;comment:sku price"`
+	ID         int             `gorm:"column:id;primaryKey;autoIncrement"`
+	SkuNo      string          `gorm:"column:skuNo;size:32;uniqueIndex:uk_sku_no"`
+	SkuName    string          `gorm:"column:skuName;size:50"`
+	SkuDesc    string          `gorm:"column:skuDesc;size:256"`
+	SkuType    SKUStatus       `gorm:"column:skuType"`
+	Status     SKUStatus       `gorm:"column:status;not null"`
+	Sort       int             `gorm:"column:sort;default:0"`
+	SkuStock   int             `gorm:"column:skuStock;not null;default:0"`
+	SkuPrice   decimal.Decimal `gorm:"column:skuPrice;type:decimal(8,2);not null"`
 	CreateTime time.Time       `gorm:"column:createTime;autoCreateTime"`
 	LastUpdate time.Time       `gorm:"column:lastUpdate;autoUpdateTime"`
 }
 
-func (s *SKU) TableName() string {
-	return "sku"
+func (SKU) TableName() string { return "sku" }
+
+type SKUAttr struct {
+	ID           int            `gorm:"column:id;primaryKey;autoIncrement"`
+	SkuNo        string         `gorm:"column:skuNo;size:32;uniqueIndex:uk_sku_no"`
+	SkuAttribute datatypes.JSON `gorm:"column:skuAttribute"`
+	CreateTime   time.Time      `gorm:"column:createTime;autoCreateTime"`
+	LastUpdate   time.Time      `gorm:"column:lastUpdate;autoUpdateTime"`
 }
+
+func (SKUAttr) TableName() string { return "sku_attr" }
+
+type SPUToSKU struct {
+	ID         uint64    `gorm:"column:id;primaryKey;autoIncrement"`
+	SkuNo      string    `gorm:"column:skuNo;size:32;not null;index:idx_sku"`
+	SpuNo      string    `gorm:"column:spuNo;size:32;not null;uniqueIndex:uk_spu_sku"`
+	IsDeleted  uint8     `gorm:"column:isDeleted;default:0"`
+	CreateTime time.Time `gorm:"column:createTime;autoCreateTime"`
+	LastUpdate time.Time `gorm:"column:lastUpdate;autoUpdateTime"`
+}
+
+func (SPUToSKU) TableName() string { return "spu_to_sku" }

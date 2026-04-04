@@ -9,10 +9,11 @@ All endpoints are prefixed with `/v1`.
 ### 1. Login
 - **POST** `/v1/auth/login`
 - **Auth**: No
+- **Rate Limited**: Yes
 - **Request**:
   ```json
   {
-    "username": "your_username",
+    "email": "your_email",
     "password": "your_password"
   }
   ```
@@ -58,26 +59,9 @@ Implements JTI rotation — old refresh token is blacklisted on use.
 
 ---
 
-### 4. Get Info
-- **GET** `/v1/auth/get_info`
-- **Auth**: Yes (Bearer Access Token)
-- **Response**:
-  ```json
-  {
-    "claims": {
-      "user_id": "...",
-      "session_id": "...",
-      "type": "access",
-      "exp": "..."
-    }
-  }
-  ```
-
----
-
 ## User
 
-### 5. Register
+### 4. Register
 - **POST** `/v1/user/register`
 - **Auth**: No
 - **Rate Limited**: Yes
@@ -96,7 +80,7 @@ Implements JTI rotation — old refresh token is blacklisted on use.
 
 ---
 
-### 6. Get User Profile
+### 5. Get User Profile
 - **POST** `/v1/user/profile`
 - **Auth**: Yes (Bearer Access Token)
 - **Request**:
@@ -116,7 +100,7 @@ Implements JTI rotation — old refresh token is blacklisted on use.
 
 ---
 
-### 7. Update User Profile
+### 6. Update User Profile
 - **POST** `/v1/user/profile/update`
 - **Auth**: Yes (Bearer Access Token)
 - **Request**:
@@ -136,4 +120,25 @@ Implements JTI rotation — old refresh token is blacklisted on use.
 - **Response**:
   ```json
   { "message": "Update successful" }
+  ```
+
+---
+
+## Product
+
+### 7. Get Product
+- **GET** `/v1/order/get-product`
+- **Auth**: No
+- **Status**: 🚧 Work in progress
+
+---
+
+## Health
+
+### 8. Health Check
+- **GET** `/v1/health`
+- **Auth**: No
+- **Response**:
+  ```json
+  { "status": "ok" }
   ```
